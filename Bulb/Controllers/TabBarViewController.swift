@@ -39,10 +39,10 @@ class TabBarViewController: UITabBarController {
             selectedImage: nil
         )
         
-        homeViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 5, left: 16, bottom: 15, right: 16)
-        profileViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 5, left: 12, bottom: 15, right: 12)
-        searchViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 5, left: 15, bottom: 15, right: 15)
-        addViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 5, left: 15, bottom: 15, right: 15)
+        homeViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 15, left: 16, bottom: 15, right: 16)
+        profileViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 15, left: 12, bottom: 15, right: 12)
+        searchViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
+        addViewController.tabBarItem.imageInsets =  UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
         
         UITabBar.appearance().tintColor = UIColor(named: "violetBulb")
         

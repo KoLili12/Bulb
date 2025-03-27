@@ -48,6 +48,7 @@ class HomeCollectionViewCell: UICollectionViewCell {
         setupGradient()
         contentView.addSubview(nameTaskLabel)
         contentView.addSubview(authorLabel)
+        setupBorder()
         
         NSLayoutConstraint.activate([
             imageSelectionView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -69,28 +70,33 @@ class HomeCollectionViewCell: UICollectionViewCell {
         // Удаляем существующий слой градиента, если он есть
         gradientLayer.removeFromSuperlayer()
         
-        // Создаем новый градиент с более выраженным фиолетовым оттенком
+        // Создаем максимально стеклянный градиент
         gradientLayer.colors = [
-            UIColor.clear.cgColor,
-            UIColor(red: 0.4, green: 0.3, blue: 0.5, alpha: 0.1).cgColor,  // Более яркий фиолетовый оттенок
-            UIColor(red: 0.35, green: 0.25, blue: 0.45, alpha: 0.4).cgColor,
-            UIColor(red: 0.3, green: 0.2, blue: 0.4, alpha: 0.7).cgColor,
-            UIColor(red: 0.25, green: 0.15, blue: 0.35, alpha: 0.85).cgColor
+            UIColor.clear.cgColor,                                    // Полностью прозрачный сверху
+            UIColor(white: 0.95, alpha: 0.05).cgColor,                // Очень легкий дымчатый
+            UIColor(white: 0.9, alpha: 0.15).cgColor,                 // Почти прозрачный
+            UIColor(white: 0.85, alpha: 0.3).cgColor                  // Легкая дымка внизу
         ]
         
-        // Настраиваем расположение для более плавного и очевидного градиента
-        gradientLayer.locations = [0.0, 0.4, 0.6, 0.8, 1.0]
+        // Настраиваем расположение переходов для более естественного стеклянного эффекта
+        gradientLayer.locations = [0.0, 0.75, 0.9, 1.0]
         
+        // Закругляем углы градиента
         gradientLayer.cornerRadius = 20
         
-        // Делаем градиент более заметным
-        gradientLayer.opacity = 1.0
-        
-        // Направление градиента
+        // Настраиваем направление градиента
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
         
-        // Важно: добавляем градиент ПОВЕРХ imageView
+        // Максимальная прозрачность для стеклянного эффекта
+        gradientLayer.opacity = 0.95
+        
+        // Добавляем гауссовое размытие для имитации матового стекла
+        let filter = CIFilter(name: "CIGaussianBlur")
+        filter?.setValue(3.0, forKey: "inputRadius")
+        gradientLayer.filters = [filter!]
+        
+        // Добавляем градиент поверх изображения
         imageSelectionView.layer.addSublayer(gradientLayer)
     }
     
@@ -112,6 +118,16 @@ class HomeCollectionViewCell: UICollectionViewCell {
         layer.shouldRasterize = true
         layer.rasterizationScale = UIScreen.main.scale
     }
+    
+    private func setupBorder() {
+            // Настройка границы
+            self.contentView.layer.borderWidth = 1.0
+            self.contentView.layer.borderColor = UIColor.gray.cgColor
+            
+            // Если нужно скругленные углы
+            self.contentView.layer.cornerRadius = 20
+            self.contentView.layer.masksToBounds = true
+        }
     
     override func layoutSubviews() {
         super.layoutSubviews()

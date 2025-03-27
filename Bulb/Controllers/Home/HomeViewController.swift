@@ -66,7 +66,12 @@ extension HomeViewController: UICollectionViewDataSource {
 }
 
 extension HomeViewController: UICollectionViewDelegate {
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) { // 2
+        let cell = collectionView.cellForItem(at: indexPath) as? HomeCollectionViewCell
+        
+        
+        
+    }
 }
 
 extension HomeViewController: UICollectionViewDelegateFlowLayout {
