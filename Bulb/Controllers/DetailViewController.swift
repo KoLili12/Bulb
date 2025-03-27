@@ -9,7 +9,7 @@ import UIKit
 
 class DetailViewController: UIViewController {
     
-    private lazy var sectionlable: UILabel = {
+    lazy var sectionlable: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -17,7 +17,7 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    private lazy var descriptionLabel: UILabel = {
+    lazy var descriptionLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -25,7 +25,7 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    private lazy var countQustionsLabel: UILabel = {
+    lazy var countQustionsLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -33,7 +33,7 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    private lazy var countWinLabel: UILabel = {
+    lazy var countWinLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -44,6 +44,7 @@ class DetailViewController: UIViewController {
     private lazy var ChooseLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
+        label.text = "Выберите режим:"
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 19, weight: .semibold)
         return label
@@ -52,16 +53,51 @@ class DetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
+        let backButton = createBackButton()
+        
 
-        // Do any additional setup after loading the view.
+        view.addSubview(sectionlable)
+        view.addSubview(backButton)
+        view.addSubview(descriptionLabel)
+        view.addSubview(countQustionsLabel)
+        view.addSubview(countWinLabel)
+        view.addSubview(ChooseLabel)
+        
+        NSLayoutConstraint.activate([
+            sectionlable.topAnchor.constraint(equalTo: view.topAnchor, constant: 92),
+            sectionlable.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 104),
+            backButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
+            backButton.widthAnchor.constraint(equalToConstant: 15),
+            backButton.heightAnchor.constraint(equalToConstant: 15),
+            
+            descriptionLabel.topAnchor.constraint(equalTo: sectionlable.bottomAnchor, constant: 23),
+            descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            countQustionsLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 44),
+            countQustionsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            countWinLabel.topAnchor.constraint(equalTo: countQustionsLabel.bottomAnchor, constant: 6),
+            countWinLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            ChooseLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 23),
+            ChooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+        ])
     }
     
-    private func backButton() {
-        
+    private func createBackButton() -> UIButton {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(named: "backButton"), for: .normal)
+        button.tintColor = .black
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTabBackButton), for: .touchUpInside)
+        return button
     }
     
     @objc private func didTabBackButton() {
-        
+        dismiss(animated: true)
     }
 
 }

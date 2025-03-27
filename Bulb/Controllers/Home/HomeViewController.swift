@@ -69,6 +69,10 @@ extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) { // 2
         let cell = collectionView.cellForItem(at: indexPath) as? HomeCollectionViewCell
         let viewController = DetailViewController()
+        viewController.sectionlable.text = "Название подборки"
+        viewController.descriptionLabel.text = "Описание подборки"
+        viewController.countQustionsLabel.text = "􀿨 32 вопроса"
+        viewController.countWinLabel.text = "􂝈 4542 раз пройдено"
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
     }
