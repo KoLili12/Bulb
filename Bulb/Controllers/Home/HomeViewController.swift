@@ -27,7 +27,8 @@ class HomeViewController: UIViewController {
         
         collectionView.delegate = self
         collectionView.dataSource = self
-        
+        collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.scrollIndicatorInsets = collectionView.contentInset
         collectionView.register(HomeCollectionViewCell.self, forCellWithReuseIdentifier: "HomeCell")
         
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -41,9 +42,9 @@ class HomeViewController: UIViewController {
             label.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             collectionView.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 24),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor,  constant: 28),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28)
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor,  constant: 0),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0)
         ])
         
     }
@@ -77,6 +78,8 @@ extension HomeViewController: UICollectionViewDelegateFlowLayout {
             return 20
         }
     
-    
-    
+    // Добавляем этот метод для отступов слева и справа
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 0, left: 28, bottom: 0, right: 28)
+    }
 }

@@ -9,6 +9,8 @@ import UIKit
 
 class HomeCollectionViewCell: UICollectionViewCell {
     
+    private let gradientLayer = CAGradientLayer()
+    
     lazy var nameTaskLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .bold)
@@ -37,10 +39,13 @@ class HomeCollectionViewCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        contentView.backgroundColor = .black
         contentView.layer.cornerRadius = 20
         
+        // Сначала настраиваем градиент (чтобы он был позади надписей)
+        setupShadow()
+        
         contentView.addSubview(imageSelectionView)
+        setupGradient()
         contentView.addSubview(nameTaskLabel)
         contentView.addSubview(authorLabel)
         
@@ -58,6 +63,76 @@ class HomeCollectionViewCell: UICollectionViewCell {
             nameTaskLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
         ])
         
+    }
+    
+    private func setupGradient() {
+        // Удаляем существующий слой градиента, если он есть
+        gradientLayer.removeFromSuperlayer()
+        
+        // Создаем новый градиент с более выраженным фиолетовым оттенком
+        gradientLayer.colors = [
+            UIColor.clear.cgColor,
+            UIColor(red: 0.4, green: 0.3, blue: 0.5, alpha: 0.1).cgColor,  // Более яркий фиолетовый оттенок
+            UIColor(red: 0.35, green: 0.25, blue: 0.45, alpha: 0.4).cgColor,
+            UIColor(red: 0.3, green: 0.2, blue: 0.4, alpha: 0.7).cgColor,
+            UIColor(red: 0.25, green: 0.15, blue: 0.35, alpha: 0.85).cgColor
+        ]
+        
+        // Настраиваем расположение для более плавного и очевидного градиента
+        gradientLayer.locations = [0.0, 0.4, 0.6, 0.8, 1.0]
+        
+        gradientLayer.cornerRadius = 20
+        
+        // Делаем градиент более заметным
+        gradientLayer.opacity = 1.0
+        
+        // Направление градиента
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+        
+        // Важно: добавляем градиент ПОВЕРХ imageView
+        imageSelectionView.layer.addSublayer(gradientLayer)
+    }
+    
+    private func setupShadow() {
+        // Отключаем обрезку содержимого по границам слоя
+        layer.masksToBounds = false
+        
+        // Основная тень - мягкая и рассеянная
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 2)
+        layer.shadowRadius = 15  // Большое значение для мягкой, размытой тени
+        layer.shadowOpacity = 0.3
+        
+        // Добавляем небольшое свечение по контуру
+        contentView.layer.borderWidth = 0.5
+        contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
+        
+        // Улучшаем производительность
+        layer.shouldRasterize = true
+        layer.rasterizationScale = UIScreen.main.scale
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Обновление размера градиента при изменении размеров ячейки
+        gradientLayer.frame = contentView.bounds
+        // Обновляем путь тени при изменении размера
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 20).cgPath
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Отключаем растеризацию при переиспользовании ячейки
+        layer.shouldRasterize = false
+    }
+
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        if superview != nil {
+            // Включаем растеризацию снова, когда ячейка видна
+            layer.shouldRasterize = true
+        }
     }
     
     required init?(coder: NSCoder) {
