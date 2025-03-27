@@ -9,6 +9,8 @@ import UIKit
 
 class HomeViewController: UIViewController {
     
+    let mockImages = ["1", "2", "3", "1", "2", "3", "1", "2", "3", "1"]
+    
     lazy var label: UILabel = {
         let label = UILabel()
         label.text = "Сейчас в тренде"
@@ -54,9 +56,11 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeCell", for: indexPath)
-        
-        return cell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeCell", for: indexPath) as? HomeCollectionViewCell
+        cell?.authorLabel.text = "John Doel"
+        cell?.nameTaskLabel.text = "Task 1"
+        cell?.imageSelectionView.image = UIImage(named: mockImages[indexPath.row])
+        return cell ?? UICollectionViewCell()
     }
 }
 
