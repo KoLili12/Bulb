@@ -37,7 +37,7 @@ class HomeCollectionViewCell: UICollectionViewCell {
         return imageView
     }()
     
-    override init(frame: CGRect) {
+    private override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.layer.cornerRadius = 20
         

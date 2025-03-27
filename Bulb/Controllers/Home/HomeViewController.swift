@@ -58,8 +58,8 @@ extension HomeViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeCell", for: indexPath) as? HomeCollectionViewCell
-        cell?.authorLabel.text = "John Doel"
-        cell?.nameTaskLabel.text = "Task 1"
+        cell?.authorLabel.text = "от Oxxxymiron"
+        cell?.nameTaskLabel.text = "Задания на 5+, детка"
         cell?.imageSelectionView.image = UIImage(named: mockImages[indexPath.row])
         return cell ?? UICollectionViewCell()
     }
@@ -68,9 +68,9 @@ extension HomeViewController: UICollectionViewDataSource {
 extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) { // 2
         let cell = collectionView.cellForItem(at: indexPath) as? HomeCollectionViewCell
-        
-        
-        
+        let viewController = DetailViewController()
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
     }
 }
 

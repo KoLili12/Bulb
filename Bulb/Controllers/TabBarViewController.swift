@@ -73,7 +73,7 @@ class TabBarViewController: UITabBarController {
         gradientLayer.frame = tabBar.bounds
         gradientLayer.colors = [
             UIColor.white.withAlphaComponent(0.1).cgColor,  // Очень прозрачный вверху
-            UIColor.white.withAlphaComponent(0.7).cgColor   // Более плотный внизу
+            UIColor.white.withAlphaComponent(0.8).cgColor   // Более плотный внизу
         ]
         gradientLayer.locations = [0.0, 1.0]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
