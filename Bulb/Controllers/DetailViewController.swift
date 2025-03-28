@@ -55,6 +55,7 @@ class DetailViewController: UIViewController {
         view.backgroundColor = .white
         
         let backButton = createBackButton()
+        let playButton = createPlayButton()
         
 
         view.addSubview(sectionlable)
@@ -63,6 +64,7 @@ class DetailViewController: UIViewController {
         view.addSubview(countQustionsLabel)
         view.addSubview(countWinLabel)
         view.addSubview(ChooseLabel)
+        view.addSubview(playButton)
         
         NSLayoutConstraint.activate([
             sectionlable.topAnchor.constraint(equalTo: view.topAnchor, constant: 92),
@@ -84,6 +86,11 @@ class DetailViewController: UIViewController {
             
             ChooseLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 23),
             ChooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            playButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -82),
+            playButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            playButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
+            playButton.heightAnchor.constraint(equalToConstant: 57)
         ])
     }
     
@@ -96,7 +103,22 @@ class DetailViewController: UIViewController {
         return button
     }
     
+    private func createPlayButton() -> UIButton {
+        let button = UIButton(type: .system)
+        button.tintColor = .white
+        button.setTitle("Играть", for: .normal)
+        button.backgroundColor = UIColor(named: "violetBulb")
+        button.layer.cornerRadius = 23
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTabPlayButton), for: .touchUpInside)
+        return button
+    }
+    
     @objc private func didTabBackButton() {
+        dismiss(animated: true)
+    }
+    
+    @objc private func didTabPlayButton() {
         dismiss(animated: true)
     }
 
