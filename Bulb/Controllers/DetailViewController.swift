@@ -51,6 +51,9 @@ class DetailViewController: UIViewController {
     }()
     
     private var collectionView: UICollectionView!
+    
+    // Отслеживаем текущий выбранный режим
+    private var selectedMode: GameMode = .random
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,6 +63,8 @@ class DetailViewController: UIViewController {
         let playButton = createPlayButton()
         
 
+        setupCollectionView()
+        
         view.addSubview(sectionlable)
         view.addSubview(backButton)
         view.addSubview(descriptionLabel)
@@ -68,11 +73,10 @@ class DetailViewController: UIViewController {
         view.addSubview(ChooseLabel)
         view.addSubview(collectionView)
         view.addSubview(playButton)
-        
-        setupCollectionView()
+
         
         NSLayoutConstraint.activate([
-            sectionlable.topAnchor.constraint(equalTo: view.topAnchor, constant: 92),
+            sectionlable.topAnchor.constraint(equalTo: view.topAnchor, constant: 56),
             sectionlable.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
             backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 104),
@@ -93,10 +97,11 @@ class DetailViewController: UIViewController {
             ChooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
             
-            collectionView.topAnchor.constraint(equalTo: ChooseLabel.topAnchor, constant: 10),
+            collectionView.topAnchor.constraint(equalTo: ChooseLabel.topAnchor, constant: 50),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             collectionView.heightAnchor.constraint(equalTo: view.widthAnchor, constant: -40),
+            collectionView.bottomAnchor.constraint(equalTo: playButton.bottomAnchor, constant: -70),
             
             playButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -82),
             playButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
@@ -107,7 +112,7 @@ class DetailViewController: UIViewController {
     
     private func setupCollectionView() {
             let layout = UICollectionViewFlowLayout()
-            layout.minimumLineSpacing = 20
+            layout.minimumLineSpacing = 13
             layout.minimumInteritemSpacing = 20
             
             collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -144,23 +149,34 @@ class DetailViewController: UIViewController {
     }
     
     @objc private func didTabPlayButton() {
-        dismiss(animated: true)
+        print("Запуск игры в режиме: \(selectedMode.rawValue)")
     }
 
 }
 
-extension DetailViewController: UICollectionViewDelegate {
-    
-}
-
-extension DetailViewController: UICollectionViewDataSource {
+extension DetailViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        <#code#>
+        return GameMode.allCases.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        <#code#>
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GameModeCell", for: indexPath) as! GameModeCell
+        
+        let mode = GameMode.allCases[indexPath.item]
+        let isSelected = mode == selectedMode
+        
+        cell.configure(title: mode.rawValue, isSelected: isSelected)
+        return cell
     }
     
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        selectedMode = GameMode.allCases[indexPath.item]
+        collectionView.reloadData()
+    }
+}
+
+extension DetailViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 149, height: 149)
+    }
 }
