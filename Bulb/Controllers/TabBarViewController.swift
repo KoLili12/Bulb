@@ -72,9 +72,10 @@ class TabBarViewController: UITabBarController {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = tabBar.bounds
         gradientLayer.colors = [
-            UIColor.white.withAlphaComponent(0.1).cgColor,  // Очень прозрачный вверху
-            UIColor.white.withAlphaComponent(0.8).cgColor   // Более плотный внизу
+            UIColor.white.withAlphaComponent(0.3).cgColor,  // Увеличиваем с 0.1 до 0.3
+            UIColor.white.withAlphaComponent(0.9).cgColor   // Увеличиваем с 0.8 до 0.9
         ]
+
         gradientLayer.locations = [0.0, 1.0]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
@@ -84,8 +85,8 @@ class TabBarViewController: UITabBarController {
         let visualEffectView = UIVisualEffectView(effect: blurEffect)
         visualEffectView.frame = tabBar.bounds
         visualEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        visualEffectView.alpha = 0.7 // Уменьшаем общую непрозрачность
-        
+        visualEffectView.alpha = 0.82
+
         // Добавляем размытие и градиент
         tabBar.insertSubview(visualEffectView, at: 0)
         visualEffectView.layer.insertSublayer(gradientLayer, at: 0)
