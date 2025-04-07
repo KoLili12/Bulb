@@ -44,7 +44,7 @@ class HomeCollectionViewCell: UICollectionViewCell {
         // Настройка градиента для стеклянного слоя
         glassGradientLayer.colors = [
             UIColor(hex: "84C500").withAlphaComponent(0).cgColor,
-            UIColor(hex: "84C500").withAlphaComponent(0.12).cgColor
+            UIColor(hex: "84C500").withAlphaComponent(0.2).cgColor
         ]
         glassGradientLayer.locations = [0.0, 1.0]
         glassGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
@@ -53,15 +53,18 @@ class HomeCollectionViewCell: UICollectionViewCell {
         // Настройка glassView с использованием методов библиотеки
         glassView.setTheme(theme: .light)
         glassView.setBlurDensity(with: 0.8)
-        glassView.setCornerRadius(0)  // Убираем скругления
-        glassView.setDistance(10)     // Устанавливаем небольшое распространение тени
+        glassView.setCornerRadius(0)
+        glassView.setDistance(10)
         glassView.alpha = 0.95
         glassView.translatesAutoresizingMaskIntoConstraints = false
         
+        // ВАЖНО: явно задаем Frame
+        glassView.frame = CGRect(x: 0, y: contentView.bounds.height - 78, width: contentView.bounds.width, height: 78)
+        
         contentView.addSubview(glassView)
         
-        // Добавляем градиентный слой в glassView
-        glassView.layer.addSublayer(glassGradientLayer)
+        // Добавляем градиентный слой в contentView
+        contentView.layer.addSublayer(glassGradientLayer)
         
         // Добавляем метки поверх glassView
         glassView.addSubview(nameTaskLabel)
@@ -74,7 +77,7 @@ class HomeCollectionViewCell: UICollectionViewCell {
             imageSelectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             imageSelectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
-            // Стеклянный эффект только в нижней части (~75px)
+            // Стеклянный эффект только в нижней части (~78px)
             glassView.heightAnchor.constraint(equalToConstant: 78),
             glassView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             glassView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
@@ -107,8 +110,16 @@ class HomeCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        // Обновляем фрейм градиентного слоя glassView
-        glassGradientLayer.frame = glassView.bounds
+        // Обновляем фрейм градиентного слоя
+        glassGradientLayer.frame = CGRect(
+            x: 0,
+            y: contentView.bounds.height - 78,
+            width: contentView.bounds.width,
+            height: 78
+        )
+        
+        print("Gradient layer frame: \(glassGradientLayer.frame)")
+        print("Glass view bounds: \(glassView.bounds)")
     }
     
     override func prepareForReuse() {
