@@ -1,15 +1,9 @@
-//
-//  HomeCollectionViewCell.swift
-//  Bulb
-//
-//  Created by Николай Жирнов on 27.03.2025.
-//
-
 import UIKit
+import CHGlassmorphismView
 
 class HomeCollectionViewCell: UICollectionViewCell {
     
-    private let gradientLayer = CAGradientLayer()
+    private let glassView = CHGlassmorphismView()
     
     lazy var nameTaskLabel: UILabel = {
         let label = UILabel()
@@ -39,23 +33,38 @@ class HomeCollectionViewCell: UICollectionViewCell {
     
     private override init(frame: CGRect) {
         super.init(frame: frame)
-        contentView.layer.cornerRadius = 20
         
-        // Сначала настраиваем градиент (чтобы он был позади надписей)
         setupShadow()
-        
         contentView.addSubview(imageSelectionView)
-        setupGradient()
+        
+        // Настройка glassView только для нижней части
+        glassView.setTheme(theme: .light)
+        glassView.setBlurDensity(with: 0.8)
+        glassView.setCornerRadius(0)
+        glassView.alpha = 0.9
+        glassView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(glassView)
+    
+        
+        // Добавляем метки поверх glassView
         contentView.addSubview(nameTaskLabel)
         contentView.addSubview(authorLabel)
-        setupBorder()
+        
         
         NSLayoutConstraint.activate([
+            // Изображение занимает всю карточку
             imageSelectionView.topAnchor.constraint(equalTo: contentView.topAnchor),
             imageSelectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             imageSelectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             imageSelectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
+            // Стеклянный эффект только в нижней части (~80px)
+            glassView.heightAnchor.constraint(equalToConstant: 80),
+            glassView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            glassView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            glassView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            // Метки текста располагаются над всеми элементами
             authorLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             
@@ -63,95 +72,47 @@ class HomeCollectionViewCell: UICollectionViewCell {
             nameTaskLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             nameTaskLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
         ])
-        
     }
     
-    private func setupGradient() {
-        // Удаляем существующий слой градиента, если он есть
-        gradientLayer.removeFromSuperlayer()
-        
-        // Создаем максимально стеклянный градиент
-        gradientLayer.colors = [
-            UIColor.clear.cgColor,                                    // Полностью прозрачный сверху
-            UIColor(white: 0.95, alpha: 0.05).cgColor,                // Очень легкий дымчатый
-            UIColor(white: 0.9, alpha: 0.15).cgColor,                 // Почти прозрачный
-            UIColor(white: 0.85, alpha: 0.3).cgColor                  // Легкая дымка внизу
-        ]
-        
-        // Настраиваем расположение переходов для более естественного стеклянного эффекта
-        gradientLayer.locations = [0.0, 0.75, 0.9, 1.0]
-        
-        // Закругляем углы градиента
-        gradientLayer.cornerRadius = 20
-        
-        // Настраиваем направление градиента
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        
-        // Максимальная прозрачность для стеклянного эффекта
-        gradientLayer.opacity = 0.95
-        
-        // Добавляем гауссовое размытие для имитации матового стекла
-        let filter = CIFilter(name: "CIGaussianBlur")
-        filter?.setValue(3.0, forKey: "inputRadius")
-        gradientLayer.filters = [filter!]
-        
-        // Добавляем градиент поверх изображения
-        imageSelectionView.layer.addSublayer(gradientLayer)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     private func setupShadow() {
-        // Отключаем обрезку содержимого по границам слоя
         layer.masksToBounds = false
-        
-        // Основная тень - мягкая и рассеянная
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOffset = CGSize(width: 0, height: 2)
-        layer.shadowRadius = 15  // Большое значение для мягкой, размытой тени
-        layer.shadowOpacity = 0.3
-        
-        // Добавляем небольшое свечение по контуру
-        contentView.layer.borderWidth = 0.5
-        contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
-        
-        // Улучшаем производительность
+        layer.shadowRadius = 5
+        layer.shadowOpacity = 0.4
         layer.shouldRasterize = true
         layer.rasterizationScale = UIScreen.main.scale
     }
     
-    private func setupBorder() {
-            // Настройка границы
-            self.contentView.layer.borderWidth = 1.0
-            self.contentView.layer.borderColor = UIColor.gray.cgColor
-            
-            // Если нужно скругленные углы
-            self.contentView.layer.cornerRadius = 20
-            self.contentView.layer.masksToBounds = true
-        }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Обновление размера градиента при изменении размеров ячейки
-        gradientLayer.frame = contentView.bounds
-        // Обновляем путь тени при изменении размера
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 20).cgPath
+        
+        // Создаем маску для скругления только нижних углов glassView
+        let path = UIBezierPath(
+            roundedRect: glassView.bounds,
+            byRoundingCorners: [.bottomLeft, .bottomRight],
+            cornerRadii: CGSize(width: 20, height: 20)
+        )
+        
+        let maskLayer = CAShapeLayer()
+        maskLayer.path = path.cgPath
+        glassView.layer.mask = maskLayer
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Отключаем растеризацию при переиспользовании ячейки
         layer.shouldRasterize = false
     }
 
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         if superview != nil {
-            // Включаем растеризацию снова, когда ячейка видна
             layer.shouldRasterize = true
         }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }

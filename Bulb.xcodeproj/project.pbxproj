@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CE28DBC92DA4370200050DA6 /* CHGlassmorphismView in Frameworks */ = {isa = PBXBuildFile; productRef = CE28DBC82DA4370200050DA6 /* CHGlassmorphismView */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4EBF89102D92C808000A286E /* Bulb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bulb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE28DBC92DA4370200050DA6 /* CHGlassmorphismView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = Bulb;
 			packageProductDependencies = (
+				CE28DBC82DA4370200050DA6 /* CHGlassmorphismView */,
 			);
 			productName = Bulb;
 			productReference = 4EBF89102D92C808000A286E /* Bulb.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = 4EBF89072D92C808000A286E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CE28DBC72DA4370200050DA6 /* XCRemoteSwiftPackageReference "CHGlassmorphismView" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4EBF89112D92C808000A286E /* Products */;
 			projectDirPath = "";
@@ -335,6 +344,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CE28DBC72DA4370200050DA6 /* XCRemoteSwiftPackageReference "CHGlassmorphismView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Chaehui-Seo/CHGlassmorphismView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CE28DBC82DA4370200050DA6 /* CHGlassmorphismView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE28DBC72DA4370200050DA6 /* XCRemoteSwiftPackageReference "CHGlassmorphismView" */;
+			productName = CHGlassmorphismView;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4EBF89082D92C808000A286E /* Project object */;
 }
