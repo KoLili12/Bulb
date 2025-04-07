@@ -4,20 +4,21 @@ import CHGlassmorphismView
 class HomeCollectionViewCell: UICollectionViewCell {
     
     private let glassView = CHGlassmorphismView()
+    private let glassGradientLayer = CAGradientLayer()
     
     lazy var nameTaskLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .bold)
         label.textColor = .white
-        label.numberOfLines = 0
+        label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     lazy var authorLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 8, weight: .medium)
-        label.textColor = .white
+        label.font = .systemFont(ofSize: 10, weight: .medium)
+        label.textColor = .white.withAlphaComponent(0.8)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -34,22 +35,37 @@ class HomeCollectionViewCell: UICollectionViewCell {
     private override init(frame: CGRect) {
         super.init(frame: frame)
         
+        contentView.layer.cornerRadius = 20
+        contentView.clipsToBounds = true
+        
         setupShadow()
         contentView.addSubview(imageSelectionView)
         
-        // Настройка glassView только для нижней части
+        // Настройка градиента для стеклянного слоя
+        glassGradientLayer.colors = [
+            UIColor(hex: "84C500").withAlphaComponent(0).cgColor,
+            UIColor(hex: "84C500").withAlphaComponent(0.12).cgColor
+        ]
+        glassGradientLayer.locations = [0.0, 1.0]
+        glassGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        glassGradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        
+        // Настройка glassView с использованием методов библиотеки
         glassView.setTheme(theme: .light)
         glassView.setBlurDensity(with: 0.8)
-        glassView.setCornerRadius(0)
-        glassView.alpha = 0.9
+        glassView.setCornerRadius(0)  // Убираем скругления
+        glassView.setDistance(10)     // Устанавливаем небольшое распространение тени
+        glassView.alpha = 0.95
         glassView.translatesAutoresizingMaskIntoConstraints = false
+        
         contentView.addSubview(glassView)
-    
+        
+        // Добавляем градиентный слой в glassView
+        glassView.layer.addSublayer(glassGradientLayer)
         
         // Добавляем метки поверх glassView
-        contentView.addSubview(nameTaskLabel)
-        contentView.addSubview(authorLabel)
-        
+        glassView.addSubview(nameTaskLabel)
+        glassView.addSubview(authorLabel)
         
         NSLayoutConstraint.activate([
             // Изображение занимает всю карточку
@@ -58,19 +74,19 @@ class HomeCollectionViewCell: UICollectionViewCell {
             imageSelectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             imageSelectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
-            // Стеклянный эффект только в нижней части (~80px)
-            glassView.heightAnchor.constraint(equalToConstant: 80),
+            // Стеклянный эффект только в нижней части (~75px)
+            glassView.heightAnchor.constraint(equalToConstant: 78),
             glassView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             glassView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             glassView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            // Метки текста располагаются над всеми элементами
-            authorLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            // Метки текста располагаются внутри glassView
+            authorLabel.bottomAnchor.constraint(equalTo: glassView.bottomAnchor, constant: -15),
+            authorLabel.leadingAnchor.constraint(equalTo: glassView.leadingAnchor, constant: 16),
             
             nameTaskLabel.bottomAnchor.constraint(equalTo: authorLabel.topAnchor, constant: -8),
-            nameTaskLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            nameTaskLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
+            nameTaskLabel.leadingAnchor.constraint(equalTo: glassView.leadingAnchor, constant: 16),
+            nameTaskLabel.trailingAnchor.constraint(equalTo: glassView.trailingAnchor, constant: -16)
         ])
     }
     
@@ -81,27 +97,18 @@ class HomeCollectionViewCell: UICollectionViewCell {
     private func setupShadow() {
         layer.masksToBounds = false
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOffset = CGSize(width: 0, height: 2)
-        layer.shadowRadius = 5
-        layer.shadowOpacity = 0.4
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 8
+        layer.shadowOpacity = 0.2
         layer.shouldRasterize = true
         layer.rasterizationScale = UIScreen.main.scale
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 20).cgPath
         
-        // Создаем маску для скругления только нижних углов glassView
-        let path = UIBezierPath(
-            roundedRect: glassView.bounds,
-            byRoundingCorners: [.bottomLeft, .bottomRight],
-            cornerRadii: CGSize(width: 20, height: 20)
-        )
-        
-        let maskLayer = CAShapeLayer()
-        maskLayer.path = path.cgPath
-        glassView.layer.mask = maskLayer
+        // Обновляем фрейм градиентного слоя glassView
+        glassGradientLayer.frame = glassView.bounds
     }
     
     override func prepareForReuse() {
@@ -114,5 +121,26 @@ class HomeCollectionViewCell: UICollectionViewCell {
         if superview != nil {
             layer.shouldRasterize = true
         }
+    }
+}
+
+// Расширение для UIColor для удобства работы с hex-цветами
+extension UIColor {
+    convenience init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt64()
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
     }
 }
