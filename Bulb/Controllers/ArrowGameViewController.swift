@@ -70,7 +70,7 @@ class ArrowGameViewController: UIViewController {
     
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Тапни, чтобы крутить стрелку!"
+        label.text = "Тапни, чтобы крутить"
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .center
@@ -233,7 +233,7 @@ class ArrowGameViewController: UIViewController {
             }
         }, completion: { _ in
             self.isSpinning = false
-            self.instructionLabel.text = "Тапни, чтобы крутить стрелку!"
+            self.instructionLabel.text = "Тапни, чтобы крутить"
         })
     }
     
