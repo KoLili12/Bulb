@@ -24,7 +24,6 @@ class HomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.contentInsetAdjustmentBehavior = .never
@@ -43,17 +42,15 @@ class HomeViewController: UIViewController {
             label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             collectionView.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 24),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor,  constant: 0),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0)
         ])
-        
     }
-
 }
 
 extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        10
+        return 10
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -66,13 +63,13 @@ extension HomeViewController: UICollectionViewDataSource {
 }
 
 extension HomeViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) { // 2
-        let cell = collectionView.cellForItem(at: indexPath) as? HomeCollectionViewCell
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let viewController = DetailViewController()
-        viewController.sectionlable.text = "Название подборки"
-        viewController.descriptionLabel.text = "Описание подборки"
-        viewController.countQustionsLabel.text = "􀿨 32 вопроса"
-        viewController.countWinLabel.text = "􂝈 4542 раз пройдено"
+        viewController.sectionLabel.text = "Название подборки\nМОЖЕТ БЫТЬ БОЛЬШ..."
+        viewController.authorLabel.text = "Ксения Собчак"
+        viewController.sampleCardLabel.text = "Самый ворущий вопрос для самого честного ответа от которого ВСЕ будут в шоке реально (но не факт)?..."
+        viewController.countQuestionsLabel.text = "􀿨 32 карточки"
+        viewController.countWinLabel.text = "􂝈 43 542 раз пройдено"
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
     }
@@ -84,10 +81,9 @@ extension HomeViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-            return 20
-        }
+        return 20
+    }
     
-    // Добавляем этот метод для отступов слева и справа
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         return UIEdgeInsets(top: 0, left: 28, bottom: 0, right: 28)
     }

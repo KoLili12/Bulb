@@ -9,9 +9,9 @@ import UIKit
 
 class DetailViewController: UIViewController {
     
-    lazy var sectionlable: UILabel = {
+    lazy var sectionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Название подборки"
+        label.text = "Название подборки\nМОЖЕТ БЫТЬ БОЛЬШ..."
         label.numberOfLines = 2
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -19,9 +19,28 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    lazy var descriptionLabel: UILabel = {
+    lazy var authorLabel: UILabel = {
         let label = UILabel()
-        label.text = "Описание подборки"
+        label.text = "Ксения Собчак"
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 14, weight: .regular)
+        return label
+    }()
+    
+    lazy var sampleCardView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.systemGray5.cgColor
+        view.layer.cornerRadius = 10
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    lazy var sampleCardLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Самый ворущий вопрос для самого честного ответа от которого ВСЕ будут в шоке реально (но не факт)?..."
         label.numberOfLines = 0
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -29,31 +48,56 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    lazy var countQustionsLabel: UILabel = {
+    lazy var countQuestionsLabel: UILabel = {
         let label = UILabel()
-        label.text = "32 вопроса"
-        label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .regular)
+        
+        let imageAttachment = NSTextAttachment()
+        imageAttachment.image = UIImage(systemName: "questionmark.app")?.withTintColor(.black)
+        imageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14) // Размер иконки соответствует тексту
+        
+        let attributedString = NSMutableAttributedString()
+        attributedString.append(NSAttributedString(attachment: imageAttachment))
+        attributedString.append(NSAttributedString(string: " 132 карточки"))
+        label.attributedText = attributedString
+        
         return label
     }()
     
     lazy var countWinLabel: UILabel = {
         let label = UILabel()
-        label.text = "4542 раза пройдено"
-        label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .regular)
+        
+        let imageAttachment = NSTextAttachment()
+        imageAttachment.image = UIImage(systemName: "gamecontroller.circle")?.withTintColor(.black)
+        imageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14) // Размер иконки соответствует тексту
+        
+        let attributedString = NSMutableAttributedString()
+        attributedString.append(NSAttributedString(attachment: imageAttachment))
+        attributedString.append(NSAttributedString(string: " 43 542 раз пройдено"))
+        label.attributedText = attributedString
+        
         return label
     }()
     
-    private lazy var ChooseLabel: UILabel = {
+    private lazy var chooseLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.text = "Выберите режим:"
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 19, weight: .semibold)
         return label
+    }()
+    
+    private lazy var infoButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "info.circle.fill"), for: .normal)
+        button.tintColor = .systemGray
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTapInfoButton), for: .touchUpInside)
+        return button
     }()
     
     private var truthOrDareCollectionView: UICollectionView!
@@ -72,50 +116,67 @@ class DetailViewController: UIViewController {
         setupTruthOrDareCollectionView()
         setupSelectionModeCollectionView()
         
-        view.addSubview(sectionlable)
+        sampleCardView.addSubview(sampleCardLabel)
+        
+        view.addSubview(sectionLabel)
         view.addSubview(backButton)
-        view.addSubview(descriptionLabel)
-        view.addSubview(countQustionsLabel)
+        view.addSubview(authorLabel)
+        view.addSubview(sampleCardView)
+        view.addSubview(countQuestionsLabel)
         view.addSubview(countWinLabel)
-        view.addSubview(ChooseLabel)
+        view.addSubview(chooseLabel)
+        view.addSubview(infoButton)
         view.addSubview(truthOrDareCollectionView)
         view.addSubview(selectionModeCollectionView)
         view.addSubview(playButton)
 
         NSLayoutConstraint.activate([
-            sectionlable.topAnchor.constraint(equalTo: view.topAnchor, constant: 56),
-            sectionlable.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            sectionlable.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
+            sectionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            sectionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            sectionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             
-            backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 104),
+            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             backButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             backButton.widthAnchor.constraint(equalToConstant: 15),
             backButton.heightAnchor.constraint(equalToConstant: 15),
             
-            descriptionLabel.topAnchor.constraint(equalTo: sectionlable.bottomAnchor, constant: 23),
-            descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            descriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
+            authorLabel.topAnchor.constraint(equalTo: sectionLabel.bottomAnchor, constant: 8),
+            authorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
-            countQustionsLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 44),
-            countQustionsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            sampleCardView.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 16),
+            sampleCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            sampleCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             
-            countWinLabel.topAnchor.constraint(equalTo: countQustionsLabel.bottomAnchor, constant: 6),
+            sampleCardLabel.topAnchor.constraint(equalTo: sampleCardView.topAnchor, constant: 10),
+            sampleCardLabel.leadingAnchor.constraint(equalTo: sampleCardView.leadingAnchor, constant: 10),
+            sampleCardLabel.trailingAnchor.constraint(equalTo: sampleCardView.trailingAnchor, constant: -10),
+            sampleCardLabel.bottomAnchor.constraint(equalTo: sampleCardView.bottomAnchor, constant: -10),
+            
+            countQuestionsLabel.topAnchor.constraint(equalTo: sampleCardView.bottomAnchor, constant: 16),
+            countQuestionsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            countWinLabel.topAnchor.constraint(equalTo: countQuestionsLabel.bottomAnchor, constant: 6),
             countWinLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
-            ChooseLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 23),
-            ChooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            chooseLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 24),
+            chooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
-            truthOrDareCollectionView.topAnchor.constraint(equalTo: ChooseLabel.bottomAnchor, constant: 20),
+            infoButton.centerYAnchor.constraint(equalTo: chooseLabel.centerYAnchor),
+            infoButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
+            infoButton.widthAnchor.constraint(equalToConstant: 24),
+            infoButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            truthOrDareCollectionView.topAnchor.constraint(equalTo: chooseLabel.bottomAnchor, constant: 16),
             truthOrDareCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             truthOrDareCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
-            truthOrDareCollectionView.heightAnchor.constraint(equalToConstant: 150), // Такая же высота, как у второй строки
+            truthOrDareCollectionView.heightAnchor.constraint(equalToConstant: 150),
             
-            selectionModeCollectionView.topAnchor.constraint(equalTo: truthOrDareCollectionView.bottomAnchor, constant: 20),
+            selectionModeCollectionView.topAnchor.constraint(equalTo: truthOrDareCollectionView.bottomAnchor, constant: 16),
             selectionModeCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             selectionModeCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             selectionModeCollectionView.heightAnchor.constraint(equalToConstant: 150),
             
-            playButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -82),
+            playButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             playButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             playButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             playButton.heightAnchor.constraint(equalToConstant: 57)
@@ -155,7 +216,7 @@ class DetailViewController: UIViewController {
     
     private func createBackButton() -> UIButton {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(named: "backButton"), for: .normal)
+        button.setImage(UIImage(systemName: "xmark"), for: .normal)
         button.tintColor = .black
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTabBackButton), for: .touchUpInside)
@@ -166,7 +227,7 @@ class DetailViewController: UIViewController {
         let button = UIButton(type: .system)
         button.tintColor = .white
         button.setTitle("Играть", for: .normal)
-        button.backgroundColor = UIColor.green
+        button.backgroundColor = UIColor.violetBulb
         button.layer.cornerRadius = 23
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTabPlayButton), for: .touchUpInside)
@@ -181,6 +242,16 @@ class DetailViewController: UIViewController {
         let gameViewController = GameViewController()
         gameViewController.modalPresentationStyle = .fullScreen
         present(gameViewController, animated: true)
+    }
+    
+    @objc private func didTapInfoButton() {
+        let alert = UIAlertController(
+            title: "Информация",
+            message: "Вы можете выбрать оба варианта (Правду и Действие)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "ОК", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
     }
 }
 
@@ -201,8 +272,8 @@ extension DetailViewController: UICollectionViewDelegate, UICollectionViewDataSo
             let isSelected = selectedTruthOrDareModes.contains(mode)
             let imageName: String? = {
                 switch mode {
-                case .truth: return "truthIcon"
-                case .dare: return "dareIcon"
+                case .truth: return "questionmark.text.page.fill"
+                case .dare: return "figure.american.football"
                 }
             }()
             let count: String? = {
@@ -224,8 +295,8 @@ extension DetailViewController: UICollectionViewDelegate, UICollectionViewDataSo
             let isSelected = mode == selectedSelectionMode
             let imageName: String? = {
                 switch mode {
-                case .wheel: return "wheelIcon"
-                case .fingers: return "fingersIcon"
+                case .fingers: return "hand.tap"
+                case .arrow: return "arrow.up.backward.circle"
                 }
             }()
             cell.configure(title: mode.rawValue, imageName: imageName, count: nil, isSelected: isSelected, showSeparator: false, isTruthOrDare: false)

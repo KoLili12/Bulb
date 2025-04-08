@@ -54,7 +54,8 @@ class GameModeCell: UICollectionViewCell {
         countLabel.textColor = isSelected ? .white : .black
         
         if let imageName = imageName {
-            iconImageView.image = UIImage(named: imageName)
+            iconImageView.image = UIImage(systemName: imageName)
+            iconImageView.tintColor = isSelected ? .white : .black
             iconImageView.isHidden = false
         } else {
             iconImageView.image = nil
@@ -71,23 +72,23 @@ class GameModeCell: UICollectionViewCell {
         }
         
         if isTruthOrDare {
-            // Для TruthOrDare: стандартное расположение (иконка слева, текст, счетчик справа)
+            // Для TruthOrDare: увеличиваем иконку и добавляем отступы
             titleLabel.textAlignment = .left
             countLabel.textAlignment = .right
             
             NSLayoutConstraint.activate([
-                iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
+                iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20), // Увеличиваем отступ слева
                 iconImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-                iconImageView.widthAnchor.constraint(equalToConstant: 24),
-                iconImageView.heightAnchor.constraint(equalToConstant: 24),
+                iconImageView.widthAnchor.constraint(equalToConstant: 30), // Увеличиваем размер иконки
+                iconImageView.heightAnchor.constraint(equalToConstant: 30),
                 
                 titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 10),
                 titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
                 
-                countLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+                countLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20), // Увеличиваем отступ справа
                 countLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
                 
-                separatorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor), // Полная длина
+                separatorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
                 separatorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
                 separatorView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
                 separatorView.heightAnchor.constraint(equalToConstant: 1)
@@ -96,9 +97,14 @@ class GameModeCell: UICollectionViewCell {
             // Для SelectionMode: текст центрирован и смещен вниз
             titleLabel.textAlignment = .center
             countLabel.isHidden = true
-            iconImageView.isHidden = true
+            iconImageView.isHidden = false
             
             NSLayoutConstraint.activate([
+                iconImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                iconImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10),
+                iconImageView.widthAnchor.constraint(equalToConstant: 40),
+                iconImageView.heightAnchor.constraint(equalToConstant: 40),
+                
                 titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
                 titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
                 
@@ -110,3 +116,4 @@ class GameModeCell: UICollectionViewCell {
         }
     }
 }
+
