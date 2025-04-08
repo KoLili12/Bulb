@@ -149,7 +149,9 @@ class DetailViewController: UIViewController {
     }
     
     @objc private func didTabPlayButton() {
-        print("Запуск игры в режиме: \(selectedMode.rawValue)")
+        let gameViewController = GameViewController()
+        gameViewController.modalPresentationStyle = .fullScreen
+        present(gameViewController, animated: true)
     }
 
 }
