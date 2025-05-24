@@ -6,6 +6,50 @@ class GameViewController: UIViewController {
     private let maxFingers = 8
     private var countdownTimer: Timer?
     private var remainingTime = 5
+    // Добавляем свойство для хранения выбранных режимов Правда/Действие
+    private var selectedTruthOrDareModes: Set<TruthOrDareMode> = []
+
+    // Добавляем метод для установки выбранных режимов
+    func setTruthOrDareModes(_ modes: Set<TruthOrDareMode>) {
+        selectedTruthOrDareModes = modes
+        
+        // Если метод вызван после загрузки view, обновляем UI
+        if isViewLoaded {
+            updateUIForSelectedModes()
+        }
+    }
+
+    // Метод для обновления UI в зависимости от выбранных режимов
+    private func updateUIForSelectedModes() {
+        // Обновляем инструкции в зависимости от выбранных режимов
+        var modeText = ""
+        
+        if selectedTruthOrDareModes.contains(.truth) {
+            modeText += "Правда"
+        }
+        
+        if selectedTruthOrDareModes.contains(.dare) {
+            if !modeText.isEmpty {
+                modeText += " и "
+            }
+            modeText += "Действие"
+        }
+        
+        if !modeText.isEmpty {
+            instructionLabel.text = "Режим: \(modeText)\nПоложите пальцы на экран (макс. 8)"
+        }
+    }
+
+    // Дополнительно переопределяем viewDidLoad, чтобы применить выбранные режимы при загрузке
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Существующий код viewDidLoad
+        setupUI()
+        
+        // Применяем выбранные режимы
+        updateUIForSelectedModes()
+    }
     
     // MARK: - UI Components
     private lazy var backgroundView: UIView = {
@@ -13,16 +57,6 @@ class GameViewController: UIViewController {
         view.backgroundColor = UIColor(named: "violetBulb") ?? .green
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
-    }()
-    private lazy var arrowButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Стрелка", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(hex: "3A5F0B") // Темно-зеленый для контраста
-        button.layer.cornerRadius = 10
-        button.addTarget(self, action: #selector(goToArrowMode), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
     }()
     
     private lazy var touchAreaView: UIView = {
@@ -65,14 +99,7 @@ class GameViewController: UIViewController {
     }()
     
     // MARK: - Lifecycle Methods
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-    }
     
-    deinit {
-        countdownTimer?.invalidate()
-    }
     
     // MARK: - Setup Methods
     private func setupUI() {
@@ -81,7 +108,6 @@ class GameViewController: UIViewController {
         view.addSubview(instructionLabel)
         view.addSubview(countdownLabel)
         view.addSubview(backButton)
-        view.addSubview(arrowButton)
         
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -106,10 +132,7 @@ class GameViewController: UIViewController {
             backButton.widthAnchor.constraint(equalToConstant: 80),
             backButton.heightAnchor.constraint(equalToConstant: 40),
             
-            arrowButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            arrowButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            arrowButton.widthAnchor.constraint(equalToConstant: 80),
-            arrowButton.heightAnchor.constraint(equalToConstant: 40)
+           
         ])
     }
     
@@ -121,8 +144,7 @@ class GameViewController: UIViewController {
             let location = touch.location(in: touchAreaView)
             
             // Игнорируем касания только в зоне backButton
-            if backButton.frame.contains(touch.location(in: view)) ||
-               arrowButton.frame.contains(touch.location(in: view)) {
+            if backButton.frame.contains(touch.location(in: view)) {
                 print("Touch ignored: \(location) - in button")
                 continue
             }

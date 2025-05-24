@@ -239,9 +239,41 @@ class DetailViewController: UIViewController {
     }
     
     @objc private func didTabPlayButton() {
-        let gameViewController = GameViewController()
-        gameViewController.modalPresentationStyle = .fullScreen
-        present(gameViewController, animated: true)
+        // Проверяем, выбран ли хотя бы один режим (Правда или Действие)
+        guard !selectedTruthOrDareModes.isEmpty else {
+            // Если ни один режим не выбран, показываем предупреждение
+            showAlert(message: "Пожалуйста, выберите режим (Правда или Действие)")
+            return
+        }
+        
+        // Если хотя бы один режим выбран, продолжаем запуск игры
+        switch selectedSelectionMode {
+        case .fingers:
+            let gameVC = GameViewController()
+            gameVC.setTruthOrDareModes(selectedTruthOrDareModes)
+            gameVC.modalPresentationStyle = .fullScreen
+            present(gameVC, animated: true)
+            
+        case .arrow:
+            let arrowGameVC = ArrowGameViewController()
+            arrowGameVC.setTruthOrDareModes(selectedTruthOrDareModes)
+            arrowGameVC.modalPresentationStyle = .fullScreen
+            present(arrowGameVC, animated: true)
+        }
+    }
+
+    // Метод для показа алерта с сообщением
+    private func showAlert(message: String) {
+        let alertController = UIAlertController(
+            title: "Внимание",
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true, completion: nil)
     }
     
     @objc private func didTapInfoButton() {
