@@ -2,6 +2,8 @@
 //  InitialViewController.swift
 //  Bulb
 //
+//  Updated to integrate with API authentication
+//
 
 import UIKit
 
@@ -72,18 +74,39 @@ class InitialViewController: UIViewController {
             // Когда все буквы добавлены, останавливаем таймер
             timer?.invalidate()
             
-            // Добавляем небольшую паузу перед переходом к основному приложению
+            // Добавляем небольшую паузу перед переходом к следующему экрану
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.navigateToMainApp()
+                self?.navigateToNextScreen()
             }
         }
     }
     
+    private func navigateToNextScreen() {
+        // Проверяем состояние аутентификации
+        if AuthManager.shared.isLoggedIn && !AuthManager.shared.isTokenExpired {
+            // Пользователь уже залогинен, переходим к основному приложению
+            navigateToMainApp()
+        } else {
+            // Показываем экран логина
+            navigateToLogin()
+        }
+    }
+    
     private func navigateToMainApp() {
-        // Создаем и переходим к основному экрану приложения (TabBarViewController)
         let tabBarVC = TabBarViewController()
         tabBarVC.modalPresentationStyle = .fullScreen
         tabBarVC.modalTransitionStyle = .crossDissolve
         present(tabBarVC, animated: true)
+    }
+    
+    private func navigateToLogin() {
+        let loginVC = LoginViewController()
+        loginVC.modalPresentationStyle = .fullScreen
+        loginVC.modalTransitionStyle = .crossDissolve
+        present(loginVC, animated: true)
+    }
+    
+    deinit {
+        timer?.invalidate()
     }
 }

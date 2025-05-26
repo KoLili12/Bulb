@@ -2,12 +2,12 @@
 //  ProfileViewController.swift
 //  Bulb
 //
-//  Created by Николай Жирнов on 25.03.2025.
+//  Updated with real user data from API
 //
 
 import UIKit
 
-// MARK: - Simple Model
+// MARK: - Simple Model (keeping for collections)
 struct PlaylistItem {
     let title: String
     let author: String
@@ -21,16 +21,13 @@ class ProfileViewController: UIViewController {
     // MARK: - Properties
     private var selectedPlaylistIndex = 0
     private var isEditingMode = false
+    private var currentUser: User?
+    private var userCollections: [Collection] = []
     
+    // Моковые данные для избранного (пока нет API для избранного)
     private let favoritesData = [
-        PlaylistItem(title: "Правда или действие", author: "Ксения Собчак", cardCount: 32, rating: "4.7", imageName: "2"),
-        PlaylistItem(title: "Вечеринка", author: "PartyQueen", cardCount: 48, rating: "4.9", imageName: "1"),
-        PlaylistItem(title: "Викторина о фильмах", author: "CinemaLover", cardCount: 67, rating: "4.6", imageName: "3")
-    ]
-    
-    private let myCollectionsData = [
-        PlaylistItem(title: "Моя первая подборка", author: "Максим Петров", cardCount: 15, rating: "4.2", imageName: "1"),
-        PlaylistItem(title: "Для друзей", author: "Максим Петров", cardCount: 23, rating: "4.5", imageName: "2")
+        PlaylistItem(title: "Правда или действие", author: "Пользователь", cardCount: 32, rating: "4.7", imageName: "2"),
+        PlaylistItem(title: "Вечеринка", author: "Пользователь", cardCount: 48, rating: "4.9", imageName: "1")
     ]
     
     // MARK: - UI Components
@@ -47,17 +44,130 @@ class ProfileViewController: UIViewController {
     private var surnameTextField: UITextField!
     private var emailTextField: UITextField!
     private var phoneTextField: UITextField!
+    private var descriptionTextField: UITextField!
     private var editButton: UIButton!
+    
+    // Loading indicator
+    private lazy var loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         setupKeyboardObservers()
+        loadUserProfile()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Обновляем профиль при каждом появлении экрана
+        loadUserProfile()
     }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - User Profile Loading
+    
+    private func loadUserProfile() {
+        guard AuthManager.shared.isLoggedIn else {
+            print("❌ User not logged in")
+            showLoginRequired()
+            return
+        }
+        
+        print("🔄 Loading user profile...")
+        loadingIndicator.startAnimating()
+        
+        // Загружаем пользователя из локального хранилища
+        if let user = UserService.shared.getCurrentUserFromStorage() {
+            print("✅ User loaded successfully: \(user.name) \(user.surname)")
+            currentUser = user
+            updateUIWithUserData(user)
+            loadUserCollections()
+        } else {
+            print("❌ Failed to load user data")
+            loadingIndicator.stopAnimating()
+            showLoginRequired()
+        }
+    }
+    
+    private func loadUserCollections() {
+        UserService.shared.getUserCollections { [weak self] result in
+            DispatchQueue.main.async {
+                self?.loadingIndicator.stopAnimating()
+                
+                switch result {
+                case .success(let collections):
+                    self?.userCollections = collections
+                    print("✅ Loaded \(collections.count) user collections")
+                    self?.updatePlaylistContent()
+                    
+                case .failure(let error):
+                    print("❌ Failed to load user collections: \(error)")
+                    self?.userCollections = []
+                    self?.updatePlaylistContent()
+                }
+            }
+        }
+    }
+    
+    private func updateUIWithUserData(_ user: User) {
+        // Обновляем заголовок профиля
+        usernameLabel.text = "\(user.name) \(user.surname)"
+        userDescriptionLabel.text = user.description ?? "Описание не указано"
+        
+        // Обновляем поля формы
+        nameTextField.text = user.name
+        surnameTextField.text = user.surname
+        emailTextField.text = user.email
+        phoneTextField.text = user.phone ?? ""
+        descriptionTextField.text = user.description ?? ""
+        
+        // Обновляем изображение профиля (пока используем placeholder)
+        profileImageView.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.2)
+        
+        // Добавляем инициалы на изображение
+        let initials = "\(user.name.prefix(1))\(user.surname.prefix(1))".uppercased()
+        profileImageView.layer.sublayers?.removeAll()
+        
+        let textLayer = CATextLayer()
+        textLayer.string = initials
+        textLayer.fontSize = 24
+        textLayer.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        textLayer.foregroundColor = UIColor.systemPurple.cgColor
+        textLayer.alignmentMode = .center
+        textLayer.frame = profileImageView.bounds
+        textLayer.contentsScale = UIScreen.main.scale
+        profileImageView.layer.addSublayer(textLayer)
+    }
+    
+    private func showLoginRequired() {
+        let alert = UIAlertController(
+            title: "Требуется вход",
+            message: "Для просмотра профиля необходимо войти в аккаунт",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Войти", style: .default) { [weak self] _ in
+            self?.showLogin()
+        })
+        
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+        
+        present(alert, animated: true)
+    }
+    
+    private func showLogin() {
+        let loginVC = LoginViewController()
+        loginVC.modalPresentationStyle = .fullScreen
+        present(loginVC, animated: true)
     }
     
     // MARK: - Setup
@@ -74,7 +184,6 @@ class ProfileViewController: UIViewController {
     }
     
     private func setupTapGesture() {
-        // Добавляем жест для скрытия клавиатуры при тапе на пустое место
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGesture)
@@ -108,6 +217,9 @@ class ProfileViewController: UIViewController {
         contentStackView.alignment = .fill
         contentStackView.translatesAutoresizingMaskIntoConstraints = false
         mainScrollView.addSubview(contentStackView)
+        
+        // Добавляем loading indicator
+        view.addSubview(loadingIndicator)
     }
     
     private func setupProfileHeader() {
@@ -124,17 +236,18 @@ class ProfileViewController: UIViewController {
         
         // Username
         usernameLabel = UILabel()
-        usernameLabel.text = "Максим Петров"
+        usernameLabel.text = "Загрузка..."
         usernameLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         usernameLabel.textAlignment = .center
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Description
         userDescriptionLabel = UILabel()
-        userDescriptionLabel.text = "Эксперт по квизам и викторинам"
+        userDescriptionLabel.text = "Загрузка профиля..."
         userDescriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         userDescriptionLabel.textColor = .secondaryLabel
         userDescriptionLabel.textAlignment = .center
+        userDescriptionLabel.numberOfLines = 2
         userDescriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         
         headerContainer.addSubview(profileImageView)
@@ -216,16 +329,18 @@ class ProfileViewController: UIViewController {
         fieldsStackView.translatesAutoresizingMaskIntoConstraints = false
         
         // Create text fields
-        nameTextField = createTextField(placeholder: "Имя", text: "Максим")
-        surnameTextField = createTextField(placeholder: "Фамилия", text: "Петров")
-        emailTextField = createTextField(placeholder: "Email", text: "max.petrov@example.com")
-        phoneTextField = createTextField(placeholder: "Телефон", text: "+7 (999) 123-45-67")
+        nameTextField = createTextField(placeholder: "Имя", text: "")
+        surnameTextField = createTextField(placeholder: "Фамилия", text: "")
+        emailTextField = createTextField(placeholder: "Email", text: "")
+        phoneTextField = createTextField(placeholder: "Телефон", text: "")
+        descriptionTextField = createTextField(placeholder: "Описание", text: "")
         
         // Add fields to stack
         fieldsStackView.addArrangedSubview(createFieldWithLabel("Имя:", nameTextField))
         fieldsStackView.addArrangedSubview(createFieldWithLabel("Фамилия:", surnameTextField))
         fieldsStackView.addArrangedSubview(createFieldWithLabel("Email:", emailTextField))
         fieldsStackView.addArrangedSubview(createFieldWithLabel("Телефон:", phoneTextField))
+        fieldsStackView.addArrangedSubview(createFieldWithLabel("Описание:", descriptionTextField))
         
         // Edit Button
         editButton = UIButton(type: .system)
@@ -238,13 +353,24 @@ class ProfileViewController: UIViewController {
         editButton.addTarget(self, action: #selector(editButtonTapped), for: .touchUpInside)
         
         // Добавляем Return ко всем полям для скрытия клавиатуры
-        for textField in [nameTextField, surnameTextField, emailTextField, phoneTextField] {
+        for textField in [nameTextField, surnameTextField, emailTextField, phoneTextField, descriptionTextField] {
             textField?.addTarget(self, action: #selector(textFieldDidReturn), for: .editingDidEndOnExit)
             textField?.returnKeyType = .done
         }
         
+        // Logout Button
+        let logoutButton = UIButton(type: .system)
+        logoutButton.setTitle("🚪 Выйти из аккаунта", for: .normal)
+        logoutButton.setTitleColor(.white, for: .normal)
+        logoutButton.backgroundColor = UIColor.systemRed
+        logoutButton.layer.cornerRadius = 12
+        logoutButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        logoutButton.translatesAutoresizingMaskIntoConstraints = false
+        logoutButton.addTarget(self, action: #selector(logoutButtonTapped), for: .touchUpInside)
+        
         profileContainer.addSubview(fieldsStackView)
         profileContainer.addSubview(editButton)
+        profileContainer.addSubview(logoutButton)
         
         NSLayoutConstraint.activate([
             fieldsStackView.topAnchor.constraint(equalTo: profileContainer.topAnchor, constant: 20),
@@ -255,7 +381,12 @@ class ProfileViewController: UIViewController {
             editButton.centerXAnchor.constraint(equalTo: profileContainer.centerXAnchor),
             editButton.widthAnchor.constraint(equalToConstant: 200),
             editButton.heightAnchor.constraint(equalToConstant: 44),
-            editButton.bottomAnchor.constraint(equalTo: profileContainer.bottomAnchor, constant: -20)
+            
+            logoutButton.topAnchor.constraint(equalTo: editButton.bottomAnchor, constant: 16),
+            logoutButton.centerXAnchor.constraint(equalTo: profileContainer.centerXAnchor),
+            logoutButton.widthAnchor.constraint(equalToConstant: 200),
+            logoutButton.heightAnchor.constraint(equalToConstant: 44),
+            logoutButton.bottomAnchor.constraint(equalTo: profileContainer.bottomAnchor, constant: -20)
         ])
         
         contentStackView.addArrangedSubview(profileContainer)
@@ -272,7 +403,10 @@ class ProfileViewController: UIViewController {
             contentStackView.leadingAnchor.constraint(equalTo: mainScrollView.leadingAnchor, constant: 20),
             contentStackView.trailingAnchor.constraint(equalTo: mainScrollView.trailingAnchor, constant: -20),
             contentStackView.bottomAnchor.constraint(equalTo: mainScrollView.bottomAnchor, constant: -20),
-            contentStackView.widthAnchor.constraint(equalTo: mainScrollView.widthAnchor, constant: -40)
+            contentStackView.widthAnchor.constraint(equalTo: mainScrollView.widthAnchor, constant: -40),
+            
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
@@ -327,8 +461,12 @@ class ProfileViewController: UIViewController {
         return container
     }
     
-    private func getCurrentPlaylistData() -> [PlaylistItem] {
-        return selectedPlaylistIndex == 0 ? favoritesData : myCollectionsData
+    private func getCurrentPlaylistData() -> [Any] {
+        if selectedPlaylistIndex == 0 {
+            return favoritesData
+        } else {
+            return userCollections
+        }
     }
     
     private func updatePlaylistContent() {
@@ -348,11 +486,9 @@ class ProfileViewController: UIViewController {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
         let keyboardHeight = keyboardFrame.cgRectValue.height
         
-        // Добавляем отступ снизу для scroll view
         mainScrollView.contentInset.bottom = keyboardHeight
         mainScrollView.scrollIndicatorInsets.bottom = keyboardHeight
         
-        // Прокручиваем к активному полю
         if let activeField = findFirstResponder() {
             let rect = activeField.convert(activeField.bounds, to: mainScrollView)
             mainScrollView.scrollRectToVisible(rect, animated: true)
@@ -365,7 +501,7 @@ class ProfileViewController: UIViewController {
     }
     
     private func findFirstResponder() -> UIView? {
-        for textField in [nameTextField, surnameTextField, emailTextField, phoneTextField] {
+        for textField in [nameTextField, surnameTextField, emailTextField, phoneTextField, descriptionTextField] {
             if textField?.isFirstResponder == true {
                 return textField
             }
@@ -380,13 +516,13 @@ class ProfileViewController: UIViewController {
     
     @objc private func editButtonTapped() {
         if isEditingMode {
-            // Сначала скрываем клавиатуру
             view.endEditing(true)
+            saveProfileChanges()
         }
         
         isEditingMode.toggle()
         
-        let textFields = [nameTextField, surnameTextField, emailTextField, phoneTextField]
+        let textFields = [nameTextField, surnameTextField, emailTextField, phoneTextField, descriptionTextField]
         
         for textField in textFields {
             textField?.isEnabled = isEditingMode
@@ -395,44 +531,113 @@ class ProfileViewController: UIViewController {
         
         editButton.setTitle(isEditingMode ? "Сохранить изменения" : "Редактировать профиль", for: .normal)
         editButton.backgroundColor = isEditingMode ? .systemGreen : .systemPurple
-        
-        if !isEditingMode {
-            // Update username
-            if let name = nameTextField.text, let surname = surnameTextField.text {
-                usernameLabel.text = "\(name) \(surname)"
-            }
-            
-            let alert = UIAlertController(title: "Сохранено", message: "Все изменения успешно сохранены", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
+    }
+    
+    private func saveProfileChanges() {
+        guard let name = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let surname = surnameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !name.isEmpty, !surname.isEmpty, !email.isEmpty else {
+            showAlert(title: "Ошибка", message: "Пожалуйста, заполните обязательные поля")
+            return
         }
+        
+        let phone = phoneTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let description = descriptionTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Сохраняем локально (временно)
+        UserService.shared.updateProfileLocally(
+            name: name,
+            surname: surname,
+            email: email,
+            phone: phone?.isEmpty == true ? nil : phone,
+            description: description?.isEmpty == true ? nil : description
+        )
+        
+        // Обновляем UI
+        usernameLabel.text = "\(name) \(surname)"
+        userDescriptionLabel.text = description?.isEmpty == true ? "Описание не указано" : description
+        
+        // Обновляем инициалы
+        let initials = "\(name.prefix(1))\(surname.prefix(1))".uppercased()
+        if let textLayer = profileImageView.layer.sublayers?.first as? CATextLayer {
+            textLayer.string = initials
+        }
+        
+        showAlert(title: "Сохранено", message: "Все изменения успешно сохранены")
+    }
+    
+    @objc private func logoutButtonTapped() {
+        let alert = UIAlertController(
+            title: "Выход",
+            message: "Вы уверены, что хотите выйти из аккаунта?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Выйти", style: .destructive) { [weak self] _ in
+            AuthManager.shared.logout()
+            
+            // Очищаем локальные данные пользователя
+            UserDefaults.standard.removeObject(forKey: "user_name")
+            UserDefaults.standard.removeObject(forKey: "user_surname")
+            UserDefaults.standard.removeObject(forKey: "user_email")
+            UserDefaults.standard.removeObject(forKey: "user_phone")
+            UserDefaults.standard.removeObject(forKey: "user_description")
+            
+            // Возвращаемся к экрану логина
+            let loginVC = LoginViewController()
+            loginVC.modalPresentationStyle = .fullScreen
+            self?.present(loginVC, animated: true)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
 
 // MARK: - UICollectionViewDataSource & Delegate
 extension ProfileViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return getCurrentPlaylistData().count
+        let data = getCurrentPlaylistData()
+        return data.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PlaylistCell", for: indexPath) as! SimplePlaylistCell
-        let item = getCurrentPlaylistData()[indexPath.item]
-        cell.configure(with: item)
+        
+        let data = getCurrentPlaylistData()
+        
+        if selectedPlaylistIndex == 0 {
+            // Избранные (моковые данные)
+            let item = data[indexPath.item] as! PlaylistItem
+            cell.configureWithPlaylistItem(item)
+        } else {
+            // Коллекции пользователя (реальные данные)
+            let collection = data[indexPath.item] as! Collection
+            cell.configureWithCollection(collection)
+        }
+        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = getCurrentPlaylistData()[indexPath.item]
+        let data = getCurrentPlaylistData()
         
-        let alert = UIAlertController(
-            title: item.title,
-            message: "Автор: \(item.author)\nКарточек: \(item.cardCount)\nРейтинг: \(item.rating)",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        if selectedPlaylistIndex == 0 {
+            // Избранные
+            let item = data[indexPath.item] as! PlaylistItem
+            showAlert(title: item.title, message: "Автор: \(item.author)\nКарточек: \(item.cardCount)\nРейтинг: \(item.rating)")
+        } else {
+            // Коллекции пользователя
+            let collection = data[indexPath.item] as! Collection
+            showAlert(title: collection.name, message: "Описание: \(collection.description)\nСоздано: \(collection.createdAt)")
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -440,7 +645,7 @@ extension ProfileViewController: UICollectionViewDataSource, UICollectionViewDel
     }
 }
 
-// MARK: - Simple Collection View Cell
+// MARK: - Updated Collection View Cell
 class SimplePlaylistCell: UICollectionViewCell {
     private let imageView = UIImageView()
     private let titleLabel = UILabel()
@@ -511,10 +716,25 @@ class SimplePlaylistCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with item: PlaylistItem) {
+    // Для избранных (моковые данные)
+    func configureWithPlaylistItem(_ item: PlaylistItem) {
         titleLabel.text = item.title
         authorLabel.text = item.author
         ratingLabel.text = "⭐ \(item.rating)"
-        imageView.image = UIImage(named: item.imageName)
+        
+        // Используем системную иконку как placeholder
+        imageView.image = UIImage(systemName: "photo")
+        imageView.tintColor = .systemGray4
+    }
+    
+    // Для коллекций пользователя (реальные данные API)
+    func configureWithCollection(_ collection: Collection) {
+        titleLabel.text = collection.name
+        authorLabel.text = "Мои"
+        ratingLabel.text = "📄 \(collection.actions?.count ?? 0)"
+        
+        // Используем системную иконку как placeholder
+        imageView.image = UIImage(systemName: "folder")
+        imageView.tintColor = UIColor(hex: "84C500")
     }
 }

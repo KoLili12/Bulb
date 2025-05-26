@@ -2,7 +2,7 @@
 //  APIConfig.swift
 //  Bulb
 //
-//  API Configuration for Railway deployment
+//  API Configuration with debugging
 //
 
 import Foundation
@@ -12,11 +12,11 @@ struct APIConfig {
     
     private init() {}
     
-    // Railway production URL
+    // ВАЖНО: Замените этот URL на ваш актуальный Railway URL
     #if DEBUG
-    static let baseURL = "http://localhost:8080" // Для локальной разработки
+    static let baseURL = "https://bulb-server-production.up.railway.app" // Используем Railway даже в DEBUG для тестирования
     #else
-    static let baseURL = "https://bulb-server-production.up.railway.app" // Для production
+    static let baseURL = "https://bulb-server-production.up.railway.app" // Ваш Railway URL
     #endif
     
     static let apiVersion = "/api"
@@ -37,21 +37,34 @@ struct APIConfig {
     
     // Создание URL для конкретных запросов
     static func url(for endpoint: String) -> String {
-        return baseURL + apiVersion + endpoint
+        let fullURL = baseURL + apiVersion + endpoint
+        print("🌐 Making request to: \(fullURL)") // Добавляем логирование
+        return fullURL
     }
     
     // Простая функция для тестирования подключения
     static func testConnection(completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: pingURL) else {
+            print("❌ Invalid ping URL: \(pingURL)")
             completion(false)
             return
         }
         
-        URLSession.shared.dataTask(with: url) { _, response, error in
+        print("🔍 Testing connection to: \(pingURL)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ Connection test failed: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                
                 if let httpResponse = response as? HTTPURLResponse {
+                    print("📡 Connection test response: \(httpResponse.statusCode)")
                     completion(httpResponse.statusCode == 200)
                 } else {
+                    print("❌ Invalid response type")
                     completion(false)
                 }
             }
