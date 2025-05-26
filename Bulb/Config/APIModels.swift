@@ -41,6 +41,18 @@ struct User: Codable {
     let imageUrl: String?
     let description: String?
     let createdAt: Date
+    
+    // Custom init for convenience
+    init(id: UInt, name: String, surname: String, email: String, phone: String? = nil, imageUrl: String? = nil, description: String? = nil, createdAt: Date = Date()) {
+        self.id = id
+        self.name = name
+        self.surname = surname
+        self.email = email
+        self.phone = phone
+        self.imageUrl = imageUrl
+        self.description = description
+        self.createdAt = createdAt
+    }
 }
 
 struct UserUpdateRequest: Codable {
@@ -49,6 +61,21 @@ struct UserUpdateRequest: Codable {
     let email: String
     let phone: String?
     let description: String?
+}
+
+struct UpdateProfileRequest: Codable {
+    let name: String
+    let surname: String
+    let email: String
+    let phone: String?
+    let description: String?
+}
+
+// MARK: - Public User Response (for getting other users info)
+struct PublicUserResponse: Codable {
+    let id: UInt
+    let name: String
+    let surname: String
 }
 
 // MARK: - Collection Models

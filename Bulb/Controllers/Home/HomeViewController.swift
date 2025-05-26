@@ -3,10 +3,9 @@ import UIKit
 class HomeViewController: UIViewController {
     
     // MARK: - Properties
-    
-    // Убираем моковые данные и заменяем на реальные
     private var collections: [Collection] = []
     private var isLoading = false
+    private var usersCache: [UInt: User] = [:] // Кэш пользователей
     
     // MARK: - UI Elements
     
@@ -109,7 +108,7 @@ class HomeViewController: UIViewController {
                 switch result {
                 case .success(let fetchedCollections):
                     self?.collections = fetchedCollections
-                    self?.collectionView.reloadData()
+                    self?.loadUsersForCollections(fetchedCollections)
                     print("✅ Loaded \(fetchedCollections.count) collections")
                     
                 case .failure(let error):
@@ -125,7 +124,56 @@ class HomeViewController: UIViewController {
         }
     }
     
+    // Загружаем информацию о пользователях для коллекций
+    private func loadUsersForCollections(_ collections: [Collection]) {
+        let userIds = Array(Set(collections.map { $0.userId }))
+        
+        // Загружаем пользователей, которых еще нет в кэше
+        for userId in userIds {
+            if usersCache[userId] == nil {
+                loadUser(id: userId)
+            }
+        }
+        
+        // Обновляем UI
+        collectionView.reloadData()
+    }
+    
+    private func loadUser(id: UInt) {
+        // Проверяем что пользователя еще нет в кэше
+        guard usersCache[id] == nil else { return }
+        
+        // Делаем запрос к реальному API
+        UserService.shared.getUser(id: id) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let user):
+                    self?.usersCache[id] = user
+                    print("✅ Loaded user: \(user.name) \(user.surname)")
+                    self?.collectionView.reloadData()
+                    
+                case .failure(let error):
+                    print("❌ Failed to load user \(id): \(error)")
+                    // Создаем пользователя с дефолтными данными при ошибке
+                    let defaultUser = User(
+                        id: id,
+                        name: "Пользователь",
+                        surname: "\(id)",
+                        email: "user\(id)@example.com",
+                        phone: nil,
+                        imageUrl: nil,
+                        description: nil,
+                        createdAt: Date()
+                    )
+                    self?.usersCache[id] = defaultUser
+                    self?.collectionView.reloadData()
+                }
+            }
+        }
+    }
+    
     @objc private func refreshData() {
+        usersCache.removeAll() // Очищаем кэш при обновлении
         loadTrendingCollections()
     }
     
@@ -175,6 +223,14 @@ extension HomeViewController: UICollectionViewDataSource {
         
         let collection = collections[indexPath.item]
         
+        // Получаем автора из кэша
+        let authorName: String
+        if let user = usersCache[collection.userId] {
+            authorName = "\(user.name) \(user.surname)".trimmingCharacters(in: .whitespaces)
+        } else {
+            authorName = "Загрузка..."
+        }
+        
         // Используем изображение из API или плейсхолдер
         let image: UIImage?
         if let imageUrl = collection.imageUrl, !imageUrl.isEmpty {
@@ -187,7 +243,7 @@ extension HomeViewController: UICollectionViewDataSource {
         // Конвертируем данные API в формат для ячейки
         cell.configure(
             title: collection.name,
-            author: "пользователь \(collection.userId)",
+            author: authorName,
             description: collection.description,
             rating: calculateRating(playCount: collection.playCount),
             cardCount: "\(collection.actions?.count ?? 0)",
@@ -219,7 +275,14 @@ extension HomeViewController: UICollectionViewDelegate {
         
         // Передаем реальные данные из API
         viewController.sectionLabel.text = collection.name
-        viewController.authorLabel.text = "пользователь \(collection.userId)"
+        
+        // Устанавливаем автора
+        if let user = usersCache[collection.userId] {
+            viewController.authorLabel.text = "\(user.name) \(user.surname)"
+        } else {
+            viewController.authorLabel.text = "Автор: ID \(collection.userId)"
+        }
+        
         viewController.sampleCardLabel.text = collection.description
         
         // Загружаем действия для этой коллекции

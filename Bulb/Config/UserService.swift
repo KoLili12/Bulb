@@ -2,7 +2,7 @@
 //  UserService.swift
 //  Bulb
 //
-//  Service for handling user profile operations
+//  Service for handling user profile operations with real API integration
 //
 
 import Foundation
@@ -15,20 +15,39 @@ class UserService {
     // MARK: - User Profile Methods
     
     func getCurrentUser(completion: @escaping (Result<User, NetworkError>) -> Void) {
-        // Поскольку в бэкенде нет эндпоинта /me, получим информацию из токена
-        // Или создадим эндпоинт для получения текущего пользователя
         NetworkManager.shared.request(
-            endpoint: "/user/me", // Этот эндпоинт нужно добавить в бэкенд
+            endpoint: "/user/profile",
             method: .GET,
             responseType: User.self,
             requiresAuth: true
-        ) { result in
-            completion(result)
+        ) { [weak self] result in
+            switch result {
+            case .success(let user):
+                // Сохраняем данные локально для офлайн доступа
+                self?.saveUserDataLocally(user)
+                completion(.success(user))
+            case .failure(let error):
+                // При ошибке пытаемся загрузить из локального хранилища
+                if let localUser = self?.getCurrentUserFromStorage() {
+                    completion(.success(localUser))
+                } else {
+                    completion(.failure(error))
+                }
+            }
         }
     }
     
-    func updateProfile(name: String, surname: String, email: String, phone: String?, description: String?, completion: @escaping (Result<User, NetworkError>) -> Void) {
-        let request = UserUpdateRequest(
+    func updateProfile(name: String, surname: String, email: String, phone: String?, description: String?, completion: @escaping (Result<SuccessResponse, NetworkError>) -> Void) {
+        // Создаем структуру запроса напрямую
+        struct ProfileUpdateRequest: Codable {
+            let name: String
+            let surname: String
+            let email: String
+            let phone: String?
+            let description: String?
+        }
+        
+        let request = ProfileUpdateRequest(
             name: name,
             surname: surname,
             email: email,
@@ -37,13 +56,26 @@ class UserService {
         )
         
         NetworkManager.shared.request(
-            endpoint: "/user/profile", // Этот эндпоинт тоже нужно добавить
+            endpoint: "/user/profile",
             method: .PUT,
             body: request,
-            responseType: User.self,
+            responseType: SuccessResponse.self,
             requiresAuth: true
-        ) { result in
-            completion(result)
+        ) { [weak self] result in
+            switch result {
+            case .success(let response):
+                // Обновляем локальные данные после успешного обновления
+                self?.updateProfileLocally(
+                    name: name,
+                    surname: surname,
+                    email: email,
+                    phone: phone,
+                    description: description
+                )
+                completion(.success(response))
+            case .failure(let error):
+                completion(.failure(error))
+            }
         }
     }
     
@@ -52,30 +84,21 @@ class UserService {
     func getUserCollections(completion: @escaping (Result<[Collection], NetworkError>) -> Void) {
         CollectionsService.shared.getUserCollections(completion: completion)
     }
-}
-
-// MARK: - Временное решение без новых эндпоинтов
-extension UserService {
     
-    // Создаем пользователя из токена JWT (временно)
-    func getCurrentUserFromToken() -> User? {
-        guard let token = AuthManager.shared.accessToken else { return nil }
+    // MARK: - Local Storage Methods
+    
+    private func saveUserDataLocally(_ user: User) {
+        UserDefaults.standard.set(user.name, forKey: "user_name")
+        UserDefaults.standard.set(user.surname, forKey: "user_surname")
+        UserDefaults.standard.set(user.email, forKey: "user_email")
+        UserDefaults.standard.set(user.phone, forKey: "user_phone")
+        UserDefaults.standard.set(user.description, forKey: "user_description")
+        UserDefaults.standard.set(user.id, forKey: "user_id")
+        UserDefaults.standard.synchronize()
         
-        // В реальном приложении здесь был бы парсинг JWT токена
-        // Пока возвращаем пример данных
-        return User(
-            id: 1,
-            name: "Текущий",
-            surname: "Пользователь",
-            email: "user@example.com",
-            phone: "+7 (999) 123-45-67",
-            imageUrl: nil,
-            description: "Описание пользователя",
-            createdAt: Date()
-        )
+        print("💾 User data saved locally: \(user.name) \(user.surname)")
     }
     
-    // Имитация обновления профиля (сохраняем в UserDefaults)
     func updateProfileLocally(name: String, surname: String, email: String, phone: String?, description: String?) {
         print("💾 Saving user data locally:")
         print("Name: \(name)")
@@ -89,7 +112,7 @@ extension UserService {
         UserDefaults.standard.set(email, forKey: "user_email")
         UserDefaults.standard.set(phone, forKey: "user_phone")
         UserDefaults.standard.set(description, forKey: "user_description")
-        UserDefaults.standard.synchronize() // Принудительно сохраняем
+        UserDefaults.standard.synchronize()
     }
     
     func getCurrentUserFromStorage() -> User? {
@@ -103,6 +126,7 @@ extension UserService {
         let email = UserDefaults.standard.string(forKey: "user_email")
         let phone = UserDefaults.standard.string(forKey: "user_phone")
         let description = UserDefaults.standard.string(forKey: "user_description")
+        let userId = UserDefaults.standard.object(forKey: "user_id") as? UInt ?? 1
         
         print("📖 Loading user data from storage:")
         print("Name: \(name ?? "nil")")
@@ -113,7 +137,7 @@ extension UserService {
         guard let userName = name, let userSurname = surname, let userEmail = email else {
             print("⚠️ No saved user data found, returning default user")
             return User(
-                id: 1,
+                id: userId,
                 name: "Пользователь",
                 surname: "",
                 email: "user@example.com",
@@ -125,7 +149,7 @@ extension UserService {
         }
         
         return User(
-            id: 1,
+            id: userId,
             name: userName,
             surname: userSurname,
             email: userEmail,
@@ -134,5 +158,48 @@ extension UserService {
             description: description?.isEmpty == true ? nil : description,
             createdAt: Date()
         )
+    }
+    
+    // MARK: - Public User Data (for displaying authors)
+    
+    func getUser(id: UInt, completion: @escaping (Result<User, NetworkError>) -> Void) {
+        // Делаем реальный запрос к API
+        NetworkManager.shared.request(
+            endpoint: "/users/\(id)",
+            method: .GET,
+            responseType: PublicUserResponse.self,
+            requiresAuth: false
+        ) { result in
+            switch result {
+            case .success(let publicUser):
+                // Конвертируем публичный ответ в полную модель User
+                let user = User(
+                    id: publicUser.id,
+                    name: publicUser.name,
+                    surname: publicUser.surname,
+                    email: "hidden@example.com", // Скрываем email для публичного API
+                    phone: nil,
+                    imageUrl: nil,
+                    description: nil,
+                    createdAt: Date()
+                )
+                completion(.success(user))
+                
+            case .failure(let error):
+                print("❌ Failed to load user \(id): \(error)")
+                // Fallback к дефолтным данным при ошибке
+                let fallbackUser = User(
+                    id: id,
+                    name: "Пользователь",
+                    surname: "\(id)",
+                    email: "user\(id)@example.com",
+                    phone: nil,
+                    imageUrl: nil,
+                    description: nil,
+                    createdAt: Date()
+                )
+                completion(.success(fallbackUser))
+            }
+        }
     }
 }
