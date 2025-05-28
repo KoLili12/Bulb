@@ -21,107 +21,7 @@ class GameViewController: UIViewController {
     private var isCountdownActive = false
     private var pulseAnimationTimer: Timer?
     
-    // MARK: - Existing methods remain the same...
-    func setTruthOrDareModes(_ modes: Set<TruthOrDareMode>) {
-        selectedTruthOrDareModes = modes
-        generateQuestions()
-        
-        if isViewLoaded {
-            updateUIForSelectedModes()
-        }
-    }
-    
-    private func generateQuestions() {
-        questions = []
-        
-        if selectedTruthOrDareModes.contains(.truth) {
-            questions += [
-                "Самый воспросительный вопрос для самого честного ответа от которого все будут в шоке реально (но не факт)?",
-                "О чем ты никогда не расскажешь родителям?",
-                "Самая странная привычка, которая у тебя есть?",
-                "За кем из присутствующих ты бы пошел на свидание?",
-                "Самая большая ложь, которую ты говорил?",
-                "Что тебя больше всего раздражает в людях?",
-                "Самый стыдный поступок в детстве?",
-                "О чем ты мечтаешь, но боишься признаться?",
-                "Кого из знаменитостей ты считаешь переоцененным?",
-                "Самое глупое, что ты делал ради любви?"
-            ]
-        }
-        
-        if selectedTruthOrDareModes.contains(.dare) {
-            questions += [
-                "Расскажи анекдот, стоя на одной ноге",
-                "Позвони случайному контакту и скажи 'Я тебя люблю'",
-                "Съешь что-то острое без воды",
-                "Станцуй 30 секунд без музыки",
-                "Изобрази любое животное в течение минуты",
-                "Спой песню голосом противоположного пола",
-                "Сделай селфи в смешной позе и отправь родителям",
-                "Попытайся лизнуть свой локоть",
-                "Говори только шепотом следующие 3 вопроса",
-                "Сделай планку в течение 30 секунд"
-            ]
-        }
-        
-        questions.shuffle()
-        if !questions.isEmpty {
-            updateCurrentQuestionType()
-        }
-    }
-    
-    private func updateCurrentQuestionType() {
-        guard currentQuestionIndex < questions.count else { return }
-        
-        let currentQuestion = questions[currentQuestionIndex]
-        
-        // Простая логика определения типа по содержанию
-        let truthKeywords = ["самый", "самая", "кого", "что", "как", "почему", "когда", "где", "какой"]
-        let isLikelyTruth = truthKeywords.contains { currentQuestion.lowercased().contains($0) }
-        
-        if selectedTruthOrDareModes.contains(.truth) && selectedTruthOrDareModes.contains(.dare) {
-            currentQuestionType = isLikelyTruth ? .truth : .dare
-        } else if selectedTruthOrDareModes.contains(.truth) {
-            currentQuestionType = .truth
-        } else {
-            currentQuestionType = .dare
-        }
-        
-        updateBackgroundColor()
-    }
-    
-    private func updateUIForSelectedModes() {
-        updateBackgroundColor()
-        updateQuestionCard()
-    }
-    
-    private func updateBackgroundColor() {
-        let targetColor: UIColor
-        
-        switch currentQuestionType {
-        case .truth:
-            targetColor = UIColor(hex: "84C500") // Зеленый
-        case .dare:
-            targetColor = UIColor(hex: "5800CF") // Фиолетовый
-        }
-        
-        UIView.animate(withDuration: 0.3) {
-            self.backgroundView.backgroundColor = targetColor
-        }
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-        updateUIForSelectedModes()
-        setupSwipeGestures()
-        
-        // Включаем множественные касания для всего view
-        view.isMultipleTouchEnabled = true
-        touchAreaView.isMultipleTouchEnabled = true
-    }
-    
-    // MARK: - UI Components (existing code remains the same)
+    // MARK: - UI Components
     private lazy var backgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(hex: "84C500")
@@ -250,7 +150,19 @@ class GameViewController: UIViewController {
         return view
     }()
     
-    // MARK: - Setup Methods (same as before)
+    // MARK: - Lifecycle Methods
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        updateUIForSelectedModes()
+        setupSwipeGestures()
+        
+        // Включаем множественные касания для всего view
+        view.isMultipleTouchEnabled = true
+        touchAreaView.isMultipleTouchEnabled = true
+    }
+    
+    // MARK: - Setup Methods
     private func setupUI() {
         view.addSubview(backgroundView)
         view.addSubview(touchAreaView)
@@ -332,7 +244,6 @@ class GameViewController: UIViewController {
         ])
     }
     
-    // MARK: - Swipe gestures (same as before)
     private func setupSwipeGestures() {
         let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(hideQuestion))
         swipeUp.direction = .up
@@ -355,7 +266,95 @@ class GameViewController: UIViewController {
         navigationButtons.addGestureRecognizer(swipeDownOnButtons)
     }
     
-    // MARK: - Question Management (same as before)
+    // MARK: - Game Mode Setup
+    func setTruthOrDareModes(_ modes: Set<TruthOrDareMode>) {
+        selectedTruthOrDareModes = modes
+        generateQuestions()
+        
+        if isViewLoaded {
+            updateUIForSelectedModes()
+        }
+    }
+    
+    private func generateQuestions() {
+        questions = []
+        
+        if selectedTruthOrDareModes.contains(.truth) {
+            questions += [
+                "Самый воспросительный вопрос для самого честного ответа от которого все будут в шоке реально (но не факт)?",
+                "О чем ты никогда не расскажешь родителям?",
+                "Самая странная привычка, которая у тебя есть?",
+                "За кем из присутствующих ты бы пошел на свидание?",
+                "Самая большая ложь, которую ты говорил?",
+                "Что тебя больше всего раздражает в людях?",
+                "Самый стыдный поступок в детстве?",
+                "О чем ты мечтаешь, но боишься признаться?",
+                "Кого из знаменитостей ты считаешь переоцененным?",
+                "Самое глупое, что ты делал ради любви?"
+            ]
+        }
+        
+        if selectedTruthOrDareModes.contains(.dare) {
+            questions += [
+                "Расскажи анекдот, стоя на одной ноге",
+                "Позвони случайному контакту и скажи 'Я тебя люблю'",
+                "Съешь что-то острое без воды",
+                "Станцуй 30 секунд без музыки",
+                "Изобрази любое животное в течение минуты",
+                "Спой песню голосом противоположного пола",
+                "Сделай селфи в смешной позе и отправь родителям",
+                "Попытайся лизнуть свой локоть",
+                "Говори только шепотом следующие 3 вопроса",
+                "Сделай планку в течение 30 секунд"
+            ]
+        }
+        
+        questions.shuffle()
+        if !questions.isEmpty {
+            updateCurrentQuestionType()
+        }
+    }
+    
+    private func updateCurrentQuestionType() {
+        guard currentQuestionIndex < questions.count else { return }
+        
+        let currentQuestion = questions[currentQuestionIndex]
+        
+        // Простая логика определения типа по содержанию
+        let truthKeywords = ["самый", "самая", "кого", "что", "как", "почему", "когда", "где", "какой"]
+        let isLikelyTruth = truthKeywords.contains { currentQuestion.lowercased().contains($0) }
+        
+        if selectedTruthOrDareModes.contains(.truth) && selectedTruthOrDareModes.contains(.dare) {
+            currentQuestionType = isLikelyTruth ? .truth : .dare
+        } else if selectedTruthOrDareModes.contains(.truth) {
+            currentQuestionType = .truth
+        } else {
+            currentQuestionType = .dare
+        }
+        
+        updateBackgroundColor()
+    }
+    
+    private func updateUIForSelectedModes() {
+        updateBackgroundColor()
+        updateQuestionCard()
+    }
+    
+    private func updateBackgroundColor() {
+        let targetColor: UIColor
+        
+        switch currentQuestionType {
+        case .truth:
+            targetColor = UIColor(hex: "84C500") // Зеленый
+        case .dare:
+            targetColor = UIColor(hex: "5800CF") // Фиолетовый
+        }
+        
+        UIView.animate(withDuration: 0.3) {
+            self.backgroundView.backgroundColor = targetColor
+        }
+    }
+    
     private var progressWidthConstraint: NSLayoutConstraint?
     
     private func updateQuestionCard() {
@@ -386,7 +385,7 @@ class GameViewController: UIViewController {
         nextButton.alpha = currentQuestionIndex < questions.count - 1 ? 1.0 : 0.3
     }
     
-    // MARK: - Actions (same as before)
+    // MARK: - Actions
     @objc private func hideQuestion() {
         guard isQuestionVisible else { return }
         
@@ -439,7 +438,7 @@ class GameViewController: UIViewController {
         dismiss(animated: true, completion: nil)
     }
     
-    // MARK: - 🎯 УЛУЧШЕННАЯ ОБРАБОТКА КАСАНИЙ
+    // MARK: - 🎯 ИСПРАВЛЕННАЯ ОБРАБОТКА КАСАНИЙ
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         print("Touches began: \(touches.count)")
         
@@ -493,7 +492,11 @@ class GameViewController: UIViewController {
                 let isSelectedFinger = fingerView.transform.a > 1.2 // Проверяем, увеличен ли палец
                 
                 if isSelectedFinger {
-                    // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Мгновенно меняем цвет БЕЗ анимации
+                    // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем ВСЕ анимации сначала
+                    fingerView.layer.removeAllAnimations()
+                    
+                    // Мгновенно сбрасываем к обычному виду БЕЗ анимации
+                    fingerView.transform = .identity
                     fingerView.backgroundColor = .white
                     fingerView.layer.borderWidth = 3
                     fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
@@ -501,12 +504,7 @@ class GameViewController: UIViewController {
                     fingerView.layer.shadowRadius = 8
                     fingerView.layer.shadowOpacity = 0.3
                     
-                    // Убираем все анимации победителя
-                    fingerView.layer.removeAnimation(forKey: "winnerPulse")
-                    fingerView.layer.removeAnimation(forKey: "winnerGlow")
-                    
-                    // 🎯 ГЛАВНОЕ ИСПРАВЛЕНИЕ: Сразу анимируем уменьшение от текущего размера до 0
-                    // Никаких промежуточных возвратов к identity!
+                    // ТЕПЕРЬ анимируем уменьшение от нормального размера
                     UIView.animate(withDuration: 0.25, animations: {
                         fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
                         fingerView.alpha = 0
@@ -541,24 +539,25 @@ class GameViewController: UIViewController {
                 let isSelectedFinger = fingerView.transform.a > 1.2
                 
                 if isSelectedFinger {
-                    // Для выбранного пальца: сначала быстро нормализуем
-                    UIView.animate(withDuration: 0.1, animations: {
-                        fingerView.transform = .identity
-                        fingerView.backgroundColor = .white
-                        fingerView.layer.borderWidth = 3
-                        fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
-                        fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-                        fingerView.layer.shadowRadius = 8
-                        fingerView.layer.shadowOpacity = 0.3
-                    }, completion: { _ in
-                        // Затем обычная анимация исчезновения
-                        UIView.animate(withDuration: 0.2, animations: {
-                            fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-                            fingerView.alpha = 0
-                        }) { _ in
-                            fingerView.removeFromSuperview()
-                        }
-                    })
+                    // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем ВСЕ анимации сначала
+                    fingerView.layer.removeAllAnimations()
+                    
+                    // Мгновенно сбрасываем к обычному виду БЕЗ анимации
+                    fingerView.transform = .identity
+                    fingerView.backgroundColor = .white
+                    fingerView.layer.borderWidth = 3
+                    fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
+                    fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                    fingerView.layer.shadowRadius = 8
+                    fingerView.layer.shadowOpacity = 0.3
+                    
+                    // ТЕПЕРЬ анимируем уменьшение от нормального размера
+                    UIView.animate(withDuration: 0.25, animations: {
+                        fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+                        fingerView.alpha = 0
+                    }) { _ in
+                        fingerView.removeFromSuperview()
+                    }
                 } else {
                     UIView.animate(withDuration: 0.3, animations: {
                         fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
@@ -629,9 +628,11 @@ class GameViewController: UIViewController {
     private func stopPulseAnimation(for fingerView: UIView) {
         fingerView.layer.removeAnimation(forKey: "pulseAnimation")
         
-        // Возвращаем к нормальному размеру
-        UIView.animate(withDuration: 0.2) {
-            fingerView.transform = .identity
+        // Возвращаем к нормальному размеру только если это НЕ выбранный палец
+        if fingerView.transform.a <= 1.2 {
+            UIView.animate(withDuration: 0.2) {
+                fingerView.transform = .identity
+            }
         }
     }
     
@@ -673,7 +674,7 @@ class GameViewController: UIViewController {
     // 🎯 НОВЫЙ МЕТОД: Сброс всех пальцев к обычному виду
     private func resetAllFingersToNormalState() {
         for fingerView in fingerViews.values {
-            // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем все анимации ПЕРЕД изменением внешнего вида
+            // 🎯 ИСПРАВЛЕНИЕ: Убираем все анимации ПЕРЕД изменением внешнего вида
             fingerView.layer.removeAllAnimations()
             
             // Проверяем, не в нормальном ли уже состоянии
@@ -809,3 +810,4 @@ class GameViewController: UIViewController {
         fingerView.layer.add(glowAnimation, forKey: "winnerGlow")
     }
 }
+
