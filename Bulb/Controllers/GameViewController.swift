@@ -468,6 +468,10 @@ class GameViewController: UIViewController {
             UIView.animate(withDuration: 0.3) {
                 fingerView.transform = .identity
             }
+            
+            // 🎯 ЛЕГКАЯ ВИБРАЦИЯ ПРИ ДОБАВЛЕНИИ НОВОГО ПАЛЬЦА
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
         }
         
         updateFingerCount()
@@ -640,6 +644,10 @@ class GameViewController: UIViewController {
         for fingerView in fingerViews.values {
             startPulseAnimation(for: fingerView)
         }
+        
+        // 🎯 ДОБАВЛЯЕМ ВИБРАЦИЮ ПРИ НАЧАЛЕ ПУЛЬСАЦИИ
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
     }
     
     private func stopPulseAnimationForAllFingers() {
@@ -704,7 +712,7 @@ class GameViewController: UIViewController {
         isCountdownActive = true
         print("Starting countdown with \(fingerViews.count) fingers")
         
-        // 🎯 НАЧИНАЕМ ПУЛЬСАЦИЮ ВСЕХ ПАЛЬЦЕВ
+        // 🎯 НАЧИНАЕМ ПУЛЬСАЦИЮ ВСЕХ ПАЛЬЦЕВ (с вибрацией)
         startPulseAnimationForAllFingers()
         
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
@@ -715,6 +723,10 @@ class GameViewController: UIViewController {
             
             self.remainingTime -= 1
             print("Countdown: \(self.remainingTime), fingers: \(self.fingerViews.count)")
+            
+            // 🎯 ДОБАВЛЯЕМ ЛЕГКУЮ ВИБРАЦИЮ НА КАЖДЫЙ ТИК ТАЙМЕРА
+            let selectionFeedback = UISelectionFeedbackGenerator()
+            selectionFeedback.selectionChanged()
             
             if self.remainingTime <= 0 {
                 timer.invalidate()
@@ -743,6 +755,10 @@ class GameViewController: UIViewController {
     private func animateSelection(selectedFinger: UIView?) {
         // Сначала останавливаем все пульсации
         stopPulseAnimationForAllFingers()
+        
+        // 🎯 МОЩНАЯ ВИБРАЦИЯ ПРИ ВЫБОРЕ ПОБЕДИТЕЛЯ
+        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+        impactFeedback.impactOccurred()
         
         UIView.animate(withDuration: 0.5, animations: {
             for fingerView in self.fingerViews.values {
@@ -789,6 +805,12 @@ class GameViewController: UIViewController {
     
     // MARK: - 🎯 СПЕЦИАЛЬНАЯ АНИМАЦИЯ ДЛЯ ПОБЕДИТЕЛЯ
     private func addWinnerPulseAnimation(to fingerView: UIView) {
+        // 🎯 ДОПОЛНИТЕЛЬНАЯ ВИБРАЦИЯ ДЛЯ ПОБЕДИТЕЛЯ
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let notificationFeedback = UINotificationFeedbackGenerator()
+            notificationFeedback.notificationOccurred(.success)
+        }
+        
         // Создаем специальную анимацию для победителя
         let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
         pulseAnimation.duration = 0.8
@@ -810,4 +832,5 @@ class GameViewController: UIViewController {
         fingerView.layer.add(glowAnimation, forKey: "winnerGlow")
     }
 }
+
 
