@@ -3,7 +3,7 @@ import UIKit
 class GameViewController: UIViewController {
     // MARK: - Properties
     private var fingerViews: [UITouch: UIView] = [:]
-    private let maxFingers = 5 // Ограничение iOS
+    private let maxFingers = 5
     private var countdownTimer: Timer?
     private var remainingTime = 3
     private var selectedTruthOrDareModes: Set<TruthOrDareMode> = []
@@ -17,7 +17,11 @@ class GameViewController: UIViewController {
     // Constraint для анимации контента вопроса
     private var questionContentTopConstraint: NSLayoutConstraint!
     
-    // Добавляем метод для установки выбранных режимов
+    // Новые свойства для улучшенной визуализации
+    private var isCountdownActive = false
+    private var pulseAnimationTimer: Timer?
+    
+    // MARK: - Existing methods remain the same...
     func setTruthOrDareModes(_ modes: Set<TruthOrDareMode>) {
         selectedTruthOrDareModes = modes
         generateQuestions()
@@ -27,7 +31,6 @@ class GameViewController: UIViewController {
         }
     }
     
-    // Генерируем вопросы для игры
     private func generateQuestions() {
         questions = []
         
@@ -67,7 +70,6 @@ class GameViewController: UIViewController {
         }
     }
     
-    // Определяем тип текущего вопроса
     private func updateCurrentQuestionType() {
         guard currentQuestionIndex < questions.count else { return }
         
@@ -78,7 +80,6 @@ class GameViewController: UIViewController {
         let isLikelyTruth = truthKeywords.contains { currentQuestion.lowercased().contains($0) }
         
         if selectedTruthOrDareModes.contains(.truth) && selectedTruthOrDareModes.contains(.dare) {
-            // Если выбраны оба режима, определяем по ключевым словам
             currentQuestionType = isLikelyTruth ? .truth : .dare
         } else if selectedTruthOrDareModes.contains(.truth) {
             currentQuestionType = .truth
@@ -89,13 +90,11 @@ class GameViewController: UIViewController {
         updateBackgroundColor()
     }
     
-    // Метод для обновления UI в зависимости от выбранных режимов
     private func updateUIForSelectedModes() {
         updateBackgroundColor()
         updateQuestionCard()
     }
     
-    // Обновляем цвет фона в зависимости от типа вопроса
     private func updateBackgroundColor() {
         let targetColor: UIColor
         
@@ -122,7 +121,7 @@ class GameViewController: UIViewController {
         touchAreaView.isMultipleTouchEnabled = true
     }
     
-    // MARK: - UI Components
+    // MARK: - UI Components (existing code remains the same)
     private lazy var backgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(hex: "84C500")
@@ -251,12 +250,12 @@ class GameViewController: UIViewController {
         return view
     }()
     
-    // MARK: - Setup Methods
+    // MARK: - Setup Methods (same as before)
     private func setupUI() {
         view.addSubview(backgroundView)
         view.addSubview(touchAreaView)
-        view.addSubview(questionContentView)  // Добавляем СНАЧАЛА контент вопроса
-        view.addSubview(headerView)           // ПОТОМ шапку (чтобы была поверх)
+        view.addSubview(questionContentView)
+        view.addSubview(headerView)
         
         // Элементы в статичной шапке
         headerView.addSubview(backButton)
@@ -267,13 +266,12 @@ class GameViewController: UIViewController {
         questionContentView.addSubview(questionLabel)
         questionContentView.addSubview(progressBar)
         progressBar.addSubview(progressFill)
-        questionContentView.addSubview(pullIndicator) // Полоску в контент вопроса
+        questionContentView.addSubview(pullIndicator)
         questionContentView.addSubview(navigationButtons)
         
         navigationButtons.addArrangedSubview(previousButton)
         navigationButtons.addArrangedSubview(nextButton)
         
-        // Основной constraint для позиции контента вопроса - начинаем ПОД шапкой
         questionContentTopConstraint = questionContentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40)
         
         NSLayoutConstraint.activate([
@@ -287,13 +285,11 @@ class GameViewController: UIViewController {
             touchAreaView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             touchAreaView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            // Статичная шапка - расширяем до верха экрана
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             headerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
             
-            // Элементы в шапке - привязываем к safeArea
             backButton.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -18),
             backButton.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
             
@@ -305,13 +301,11 @@ class GameViewController: UIViewController {
             questionCounterLabel.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -18),
             questionCounterLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
             
-            // Контент вопроса
             questionContentTopConstraint,
             questionContentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             questionContentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             questionContentView.heightAnchor.constraint(equalToConstant: 200),
             
-            // Элементы внутри контента вопроса
             questionLabel.topAnchor.constraint(equalTo: questionContentView.topAnchor, constant: 30),
             questionLabel.leadingAnchor.constraint(equalTo: questionContentView.leadingAnchor, constant: 16),
             questionLabel.trailingAnchor.constraint(equalTo: questionContentView.trailingAnchor, constant: -16),
@@ -331,7 +325,6 @@ class GameViewController: UIViewController {
             navigationButtons.bottomAnchor.constraint(equalTo: questionContentView.bottomAnchor),
             navigationButtons.heightAnchor.constraint(equalToConstant: 50),
             
-            // Полоска для свайпа - на том же уровне что и стрелки, снизу
             pullIndicator.centerXAnchor.constraint(equalTo: navigationButtons.centerXAnchor),
             pullIndicator.centerYAnchor.constraint(equalTo: navigationButtons.centerYAnchor),
             pullIndicator.widthAnchor.constraint(equalToConstant: 40),
@@ -339,15 +332,12 @@ class GameViewController: UIViewController {
         ])
     }
     
-    private var progressWidthConstraint: NSLayoutConstraint?
-    
+    // MARK: - Swipe gestures (same as before)
     private func setupSwipeGestures() {
-        // Свайп вверх для скрытия контента вопроса
         let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(hideQuestion))
         swipeUp.direction = .up
         questionContentView.addGestureRecognizer(swipeUp)
         
-        // Свайп вниз для показа контента вопроса - добавляем на КНОПКИ навигации
         let swipeDownOnPrevious = UISwipeGestureRecognizer(target: self, action: #selector(showQuestion))
         swipeDownOnPrevious.direction = .down
         previousButton.addGestureRecognizer(swipeDownOnPrevious)
@@ -356,16 +346,17 @@ class GameViewController: UIViewController {
         swipeDownOnNext.direction = .down
         nextButton.addGestureRecognizer(swipeDownOnNext)
         
-        // Тап по полоске для показа контента
         let tapToShow = UITapGestureRecognizer(target: self, action: #selector(showQuestion))
         pullIndicator.addGestureRecognizer(tapToShow)
         pullIndicator.isUserInteractionEnabled = true
         
-        // Также добавляем свайп вниз на сам navigationButtons
         let swipeDownOnButtons = UISwipeGestureRecognizer(target: self, action: #selector(showQuestion))
         swipeDownOnButtons.direction = .down
         navigationButtons.addGestureRecognizer(swipeDownOnButtons)
     }
+    
+    // MARK: - Question Management (same as before)
+    private var progressWidthConstraint: NSLayoutConstraint?
     
     private func updateQuestionCard() {
         guard !questions.isEmpty else { return }
@@ -374,7 +365,6 @@ class GameViewController: UIViewController {
         questionLabel.text = currentQuestion
         questionCounterLabel.text = "\(currentQuestionIndex + 1)/\(questions.count)"
         
-        // Обновляем тип вопроса
         questionTypeLabel.text = currentQuestionType.rawValue
         switch currentQuestionType {
         case .truth:
@@ -383,7 +373,6 @@ class GameViewController: UIViewController {
             questionTypeLabel.backgroundColor = UIColor(hex: "5800CF")
         }
         
-        // Обновляем прогресс-бар
         let progress = CGFloat(currentQuestionIndex + 1) / CGFloat(questions.count)
         progressWidthConstraint?.isActive = false
         progressWidthConstraint = progressFill.widthAnchor.constraint(equalTo: progressBar.widthAnchor, multiplier: progress)
@@ -393,19 +382,17 @@ class GameViewController: UIViewController {
             self.view.layoutIfNeeded()
         }
         
-        // Обновляем доступность кнопок
         previousButton.alpha = currentQuestionIndex > 0 ? 1.0 : 0.3
         nextButton.alpha = currentQuestionIndex < questions.count - 1 ? 1.0 : 0.3
     }
     
-    // MARK: - Actions
+    // MARK: - Actions (same as before)
     @objc private func hideQuestion() {
         guard isQuestionVisible else { return }
         
         isQuestionVisible = false
         
-        // Анимация скрытия контента вопроса - уходит ПОД шапку, но стрелки остаются видны
-        questionContentTopConstraint.constant = -100 // Меньше смещение, чтобы стрелки были видны
+        questionContentTopConstraint.constant = -100
         
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [], animations: {
             self.view.layoutIfNeeded()
@@ -417,8 +404,7 @@ class GameViewController: UIViewController {
         
         isQuestionVisible = true
         
-        // Анимация показа контента вопроса
-        questionContentTopConstraint.constant = 40 // Возвращаем под шапку
+        questionContentTopConstraint.constant = 40
         
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [], animations: {
             self.view.layoutIfNeeded()
@@ -453,7 +439,7 @@ class GameViewController: UIViewController {
         dismiss(animated: true, completion: nil)
     }
     
-    // MARK: - Touch Handling
+    // MARK: - 🎯 УЛУЧШЕННАЯ ОБРАБОТКА КАСАНИЙ
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         print("Touches began: \(touches.count)")
         
@@ -463,19 +449,14 @@ class GameViewController: UIViewController {
             // Исключаем касания в области шапки и контента вопроса
             if headerView.frame.contains(touch.location(in: view)) ||
                questionContentView.frame.contains(touch.location(in: view)) {
-                print("Touch ignored: \(location) - in header or question content")
                 continue
             }
             
-            // Проверяем, что touch еще не добавлен
             if fingerViews[touch] != nil {
-                print("Touch already exists, skipping")
                 continue
             }
             
-            // Ограничиваем количество касаний до 5 (лимит iOS)
             if fingerViews.count >= maxFingers {
-                print("Max fingers reached (\(maxFingers)), ignoring new touch")
                 continue
             }
             
@@ -488,8 +469,6 @@ class GameViewController: UIViewController {
             UIView.animate(withDuration: 0.3) {
                 fingerView.transform = .identity
             }
-            
-            print("Added finger at: \(location), total fingers: \(self.fingerViews.count)")
         }
         
         updateFingerCount()
@@ -505,79 +484,213 @@ class GameViewController: UIViewController {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("Touches ended: \(touches.count)")
-        
         for touch in touches {
             if let fingerView = fingerViews[touch] {
-                UIView.animate(withDuration: 0.3, animations: {
-                    fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-                    fingerView.alpha = 0
-                }) { _ in
-                    fingerView.removeFromSuperview()
+                // Останавливаем пульсацию если палец убран
+                stopPulseAnimation(for: fingerView)
+                
+                // 🎯 ИСПРАВЛЕНИЕ: Проверяем, является ли палец выбранным
+                let isSelectedFinger = fingerView.transform.a > 1.2 // Проверяем, увеличен ли палец
+                
+                if isSelectedFinger {
+                    // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Мгновенно меняем цвет БЕЗ анимации
+                    fingerView.backgroundColor = .white
+                    fingerView.layer.borderWidth = 3
+                    fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
+                    fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                    fingerView.layer.shadowRadius = 8
+                    fingerView.layer.shadowOpacity = 0.3
+                    
+                    // Убираем все анимации победителя
+                    fingerView.layer.removeAnimation(forKey: "winnerPulse")
+                    fingerView.layer.removeAnimation(forKey: "winnerGlow")
+                    
+                    // 🎯 ГЛАВНОЕ ИСПРАВЛЕНИЕ: Сразу анимируем уменьшение от текущего размера до 0
+                    // Никаких промежуточных возвратов к identity!
+                    UIView.animate(withDuration: 0.25, animations: {
+                        fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+                        fingerView.alpha = 0
+                    }) { _ in
+                        fingerView.removeFromSuperview()
+                    }
+                } else {
+                    // Для обычных пальцев: стандартная анимация
+                    UIView.animate(withDuration: 0.3, animations: {
+                        fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+                        fingerView.alpha = 0
+                    }) { _ in
+                        fingerView.removeFromSuperview()
+                    }
                 }
+                
                 fingerViews.removeValue(forKey: touch)
-                print("Removed finger, remaining: \(self.fingerViews.count)")
             }
         }
         
-        // Добавляем небольшую задержку перед обновлением счетчика
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.updateFingerCount()
         }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("Touches cancelled: \(touches.count)")
-        
-        // При отмене касаний все равно удаляем их, но аккуратно
         for touch in touches {
             if let fingerView = fingerViews[touch] {
-                UIView.animate(withDuration: 0.3, animations: {
-                    fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-                    fingerView.alpha = 0
-                }) { _ in
-                    fingerView.removeFromSuperview()
+                stopPulseAnimation(for: fingerView)
+                
+                // 🎯 ИСПРАВЛЕНИЕ: Такая же логика для отмененных касаний
+                let isSelectedFinger = fingerView.transform.a > 1.2
+                
+                if isSelectedFinger {
+                    // Для выбранного пальца: сначала быстро нормализуем
+                    UIView.animate(withDuration: 0.1, animations: {
+                        fingerView.transform = .identity
+                        fingerView.backgroundColor = .white
+                        fingerView.layer.borderWidth = 3
+                        fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
+                        fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                        fingerView.layer.shadowRadius = 8
+                        fingerView.layer.shadowOpacity = 0.3
+                    }, completion: { _ in
+                        // Затем обычная анимация исчезновения
+                        UIView.animate(withDuration: 0.2, animations: {
+                            fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+                            fingerView.alpha = 0
+                        }) { _ in
+                            fingerView.removeFromSuperview()
+                        }
+                    })
+                } else {
+                    UIView.animate(withDuration: 0.3, animations: {
+                        fingerView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+                        fingerView.alpha = 0
+                    }) { _ in
+                        fingerView.removeFromSuperview()
+                    }
                 }
+                
                 fingerViews.removeValue(forKey: touch)
-                print("Removed cancelled finger, remaining: \(self.fingerViews.count)")
             }
         }
         
-        // Обновляем счетчик с задержкой
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.updateFingerCount()
         }
     }
     
-    // MARK: - Finger View Management
+    // MARK: - 🎯 УЛУЧШЕННОЕ СОЗДАНИЕ FINGER VIEW с контрастным цветом
     private func createFingerView() -> UIView {
         let fingerView = UIView()
-        fingerView.backgroundColor = .white
+        
+        let fingerColor: UIColor
+        
+        // Используем контрастный цвет относительно фона
+        switch currentQuestionType {
+        case .truth:
+            // Фон зеленый -> используем белый для пальцев
+            fingerColor = .white
+        case .dare:
+            // Фон фиолетовый -> используем белый для пальцев
+            fingerColor = .white
+        }
+        
+        fingerView.backgroundColor = fingerColor
         fingerView.layer.cornerRadius = 50
         fingerView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        
+        // Добавляем тень для лучшей видимости
         fingerView.layer.shadowColor = UIColor.black.cgColor
-        fingerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        fingerView.layer.shadowRadius = 4
+        fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        fingerView.layer.shadowRadius = 8
         fingerView.layer.shadowOpacity = 0.3
+        
+        // Добавляем границу для еще лучшей видимости
+        fingerView.layer.borderWidth = 3
+        fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
+        
         return fingerView
     }
     
-    // MARK: - Utility Methods
+    // MARK: - 🎯 НОВЫЕ МЕТОДЫ ДЛЯ ПУЛЬСАЦИИ
+    private func startPulseAnimation(for fingerView: UIView) {
+        // Останавливаем предыдущую анимацию если есть
+        fingerView.layer.removeAllAnimations()
+        
+        let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+        pulseAnimation.duration = 0.5
+        pulseAnimation.fromValue = 1.0
+        pulseAnimation.toValue = 1.2
+        pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+        
+        fingerView.layer.add(pulseAnimation, forKey: "pulseAnimation")
+    }
+    
+    private func stopPulseAnimation(for fingerView: UIView) {
+        fingerView.layer.removeAnimation(forKey: "pulseAnimation")
+        
+        // Возвращаем к нормальному размеру
+        UIView.animate(withDuration: 0.2) {
+            fingerView.transform = .identity
+        }
+    }
+    
+    private func startPulseAnimationForAllFingers() {
+        for fingerView in fingerViews.values {
+            startPulseAnimation(for: fingerView)
+        }
+    }
+    
+    private func stopPulseAnimationForAllFingers() {
+        for fingerView in fingerViews.values {
+            stopPulseAnimation(for: fingerView)
+        }
+    }
+    
+    // MARK: - 🎯 УЛУЧШЕННЫЙ COUNTDOWN с пульсацией
     private func updateFingerCount() {
         print("Update finger count: \(fingerViews.count)")
         
-        // Очищаем "мертвые" касания (view без superview)
         let deadTouches = fingerViews.filter { $0.value.superview == nil }
         for (touch, _) in deadTouches {
             fingerViews.removeValue(forKey: touch)
-            print("Removed dead touch, remaining: \(fingerViews.count)")
         }
         
         if fingerViews.count >= 2 {
             startCountdown()
         } else {
+            // Останавливаем countdown и пульсацию
             countdownTimer?.invalidate()
             countdownTimer = nil
+            isCountdownActive = false
+            stopPulseAnimationForAllFingers()
+            
+            // 🎯 НОВОЕ: Сбрасываем все пальцы к нормальному виду
+            resetAllFingersToNormalState()
+        }
+    }
+    
+    // 🎯 НОВЫЙ МЕТОД: Сброс всех пальцев к обычному виду
+    private func resetAllFingersToNormalState() {
+        for fingerView in fingerViews.values {
+            // 🎯 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убираем все анимации ПЕРЕД изменением внешнего вида
+            fingerView.layer.removeAllAnimations()
+            
+            // Проверяем, не в нормальном ли уже состоянии
+            if fingerView.transform.a != 1.0 || fingerView.backgroundColor != UIColor.white {
+                // Мгновенно сбрасываем цвет БЕЗ анимации для предотвращения всплесков
+                fingerView.backgroundColor = .white
+                fingerView.layer.borderWidth = 3
+                fingerView.layer.borderColor = UIColor.black.withAlphaComponent(0.2).cgColor
+                fingerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                fingerView.layer.shadowRadius = 8
+                fingerView.layer.shadowOpacity = 0.3
+                
+                // Только размер анимируем плавно
+                UIView.animate(withDuration: 0.2) {
+                    fingerView.transform = .identity
+                }
+            }
         }
     }
     
@@ -587,7 +700,11 @@ class GameViewController: UIViewController {
         countdownTimer = nil
         
         remainingTime = 3
+        isCountdownActive = true
         print("Starting countdown with \(fingerViews.count) fingers")
+        
+        // 🎯 НАЧИНАЕМ ПУЛЬСАЦИЮ ВСЕХ ПАЛЬЦЕВ
+        startPulseAnimationForAllFingers()
         
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
             guard let self = self else {
@@ -601,6 +718,7 @@ class GameViewController: UIViewController {
             if self.remainingTime <= 0 {
                 timer.invalidate()
                 self.countdownTimer = nil
+                self.isCountdownActive = false
                 self.selectRandomFinger()
             }
         }
@@ -610,7 +728,7 @@ class GameViewController: UIViewController {
         print("Selecting random finger from \(fingerViews.count) fingers")
         
         guard fingerViews.count >= 2 else {
-            print("Not enough fingers for selection")
+            stopPulseAnimationForAllFingers()
             return
         }
         
@@ -620,20 +738,74 @@ class GameViewController: UIViewController {
         animateSelection(selectedFinger: selectedFinger)
     }
     
+    // MARK: - 🎯 УЛУЧШЕННАЯ АНИМАЦИЯ СЕЛЕКЦИИ с контрастными цветами
     private func animateSelection(selectedFinger: UIView?) {
-        UIView.animate(withDuration: 0.5) {
+        // Сначала останавливаем все пульсации
+        stopPulseAnimationForAllFingers()
+        
+        UIView.animate(withDuration: 0.5, animations: {
             for fingerView in self.fingerViews.values {
                 if fingerView == selectedFinger {
+                    // 🎯 ВЫБРАННЫЙ ПАЛЕЦ - яркий контрастный цвет с увеличением
                     fingerView.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
-                    fingerView.backgroundColor = self.currentQuestionType == .truth ?
-                        UIColor(hex: "84C500") : UIColor(hex: "5800CF")
+                    
+                    // Используем яркие контрастные цвета вместо цвета фона
+                    let selectedColor: UIColor
+                    switch self.currentQuestionType {
+                    case .truth:
+                        selectedColor = UIColor.systemYellow // Яркий желтый на зеленом фоне
+                    case .dare:
+                        selectedColor = UIColor.systemOrange // Яркий оранжевый на фиолетовом фоне
+                    }
+                    
+                    fingerView.backgroundColor = selectedColor
+                    
+                    // Добавляем дополнительную границу для выделения
+                    fingerView.layer.borderWidth = 5
+                    fingerView.layer.borderColor = UIColor.white.cgColor
+                    
+                    // Добавляем более яркую тень
+                    fingerView.layer.shadowColor = UIColor.black.cgColor
+                    fingerView.layer.shadowOffset = CGSize(width: 0, height: 6)
+                    fingerView.layer.shadowRadius = 12
+                    fingerView.layer.shadowOpacity = 0.5
+                    
                 } else {
+                    // Невыбранные пальцы становятся меньше и тусклее
                     fingerView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
-                    fingerView.backgroundColor = .gray
+                    fingerView.backgroundColor = UIColor.gray.withAlphaComponent(0.6)
+                    fingerView.layer.borderColor = UIColor.gray.cgColor
+                    fingerView.layer.borderWidth = 2
                 }
+            }
+        }) { _ in
+            // После анимации выбора добавляем пульсацию только к выбранному пальцу
+            if let selected = selectedFinger {
+                self.addWinnerPulseAnimation(to: selected)
             }
         }
     }
+    
+    // MARK: - 🎯 СПЕЦИАЛЬНАЯ АНИМАЦИЯ ДЛЯ ПОБЕДИТЕЛЯ
+    private func addWinnerPulseAnimation(to fingerView: UIView) {
+        // Создаем специальную анимацию для победителя
+        let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+        pulseAnimation.duration = 0.8
+        pulseAnimation.fromValue = 1.5  // Начинаем с увеличенного размера
+        pulseAnimation.toValue = 1.7    // Пульсируем еще больше
+        pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = 3  // Пульсирует 3 раза
+        
+        // Анимация свечения
+        let glowAnimation = CABasicAnimation(keyPath: "shadowOpacity")
+        glowAnimation.duration = 0.8
+        glowAnimation.fromValue = 0.5
+        glowAnimation.toValue = 0.8
+        glowAnimation.autoreverses = true
+        glowAnimation.repeatCount = 3
+        
+        fingerView.layer.add(pulseAnimation, forKey: "winnerPulse")
+        fingerView.layer.add(glowAnimation, forKey: "winnerGlow")
+    }
 }
-
-
