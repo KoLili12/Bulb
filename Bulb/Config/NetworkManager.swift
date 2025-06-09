@@ -138,8 +138,8 @@ enum HTTPMethod: String {
     case DELETE = "DELETE"
 }
 
-// MARK: - Network Errors
-enum NetworkError: Error, LocalizedError {
+// MARK: - Network Errors (с Equatable!)
+enum NetworkError: Error, LocalizedError, Equatable {
     case invalidURL
     case networkError(String)
     case invalidResponse
@@ -176,6 +176,29 @@ enum NetworkError: Error, LocalizedError {
             return "Ошибка декодирования данных"
         case .unknownError:
             return "Неизвестная ошибка"
+        }
+    }
+    
+    // MARK: - Equatable Conformance
+    static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidURL, .invalidURL),
+             (.invalidResponse, .invalidResponse),
+             (.unauthorized, .unauthorized),
+             (.notFound, .notFound),
+             (.noData, .noData),
+             (.encodingError, .encodingError),
+             (.decodingError, .decodingError),
+             (.unknownError, .unknownError):
+            return true
+        case (.networkError(let lhsMessage), .networkError(let rhsMessage)):
+            return lhsMessage == rhsMessage
+        case (.clientError(let lhsCode), .clientError(let rhsCode)):
+            return lhsCode == rhsCode
+        case (.serverError(let lhsCode), .serverError(let rhsCode)):
+            return lhsCode == rhsCode
+        default:
+            return false
         }
     }
 }

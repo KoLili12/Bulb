@@ -2,7 +2,7 @@
 //  CollectionsService.swift
 //  Bulb
 //
-//  Service for handling collections API calls
+//  Enhanced service for handling collections with action types support
 //
 
 import Foundation
@@ -68,6 +68,19 @@ class CollectionsService {
         }
     }
     
+    // MARK: - Collection Statistics
+    
+    func getCollectionStats(id: UInt, completion: @escaping (Result<CollectionStats, NetworkError>) -> Void) {
+        NetworkManager.shared.request(
+            endpoint: "/collections/\(id)/stats",
+            method: .GET,
+            responseType: CollectionStats.self,
+            requiresAuth: false
+        ) { result in
+            completion(result)
+        }
+    }
+    
     // MARK: - User Collections (auth required)
     
     func getUserCollections(completion: @escaping (Result<[Collection], NetworkError>) -> Void) {
@@ -95,6 +108,42 @@ class CollectionsService {
         
         NetworkManager.shared.request(
             endpoint: "/collections",
+            method: .POST,
+            body: request,
+            responseType: SuccessResponse.self,
+            requiresAuth: true
+        ) { result in
+            completion(result)
+        }
+    }
+    
+    // MARK: - Enhanced: Create Collection with Actions
+    
+    func createCollectionWithActions(
+        name: String,
+        description: String,
+        actions: [GameCard],
+        imageUrl: String? = nil,
+        completion: @escaping (Result<SuccessResponse, NetworkError>) -> Void
+    ) {
+        // Convert GameCard to API request format
+        let apiActions = actions.enumerated().map { index, card in
+            CreateActionRequest(
+                text: card.text,
+                type: card.type.rawValue, // "truth" or "dare"
+                order: index + 1
+            )
+        }
+        
+        let request = CreateCollectionWithActionsRequest(
+            name: name,
+            description: description,
+            imageUrl: imageUrl,
+            actions: apiActions
+        )
+        
+        NetworkManager.shared.request(
+            endpoint: "/collections/with-actions",
             method: .POST,
             body: request,
             responseType: SuccessResponse.self,
@@ -135,8 +184,12 @@ class CollectionsService {
     
     // MARK: - Actions Management
     
-    func addAction(to collectionId: UInt, text: String, order: Int, completion: @escaping (Result<SuccessResponse, NetworkError>) -> Void) {
-        let request = ActionRequest(text: text, order: order)
+    func addAction(to collectionId: UInt, text: String, type: CardType, order: Int, completion: @escaping (Result<SuccessResponse, NetworkError>) -> Void) {
+        let request = ActionRequest(
+            text: text,
+            type: type.rawValue, // "truth" or "dare"
+            order: order
+        )
         
         NetworkManager.shared.request(
             endpoint: "/collections/\(collectionId)/actions",
@@ -159,11 +212,25 @@ class CollectionsService {
             completion(result)
         }
     }
-}
-
-// MARK: - Helper Extensions
-extension CollectionsService {
+    
+    // MARK: - Helper Extensions
     func testConnection(completion: @escaping (Bool) -> Void) {
         APIConfig.testConnection(completion: completion)
+    }
+}
+
+// MARK: - GameCard compatibility for local UI models
+struct GameCard {
+    let id = UUID()
+    let text: String
+    let type: CardType
+    
+    // Convert to API format
+    var apiAction: CreateActionRequest {
+        return CreateActionRequest(
+            text: text,
+            type: type.rawValue,
+            order: 0 // Will be set by service
+        )
     }
 }

@@ -115,7 +115,6 @@ class HomeViewController: UIViewController {
                     print("❌ Error loading collections: \(error)")
                     self?.showErrorAlert(error: error)
                     
-                    // Если это первая загрузка и произошла ошибка, показываем пустое состояние
                     if self?.collections.isEmpty == true {
                         self?.showEmptyState()
                     }
@@ -140,10 +139,8 @@ class HomeViewController: UIViewController {
     }
     
     private func loadUser(id: UInt) {
-        // Проверяем что пользователя еще нет в кэше
         guard usersCache[id] == nil else { return }
         
-        // Делаем запрос к реальному API
         UserService.shared.getUser(id: id) { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
@@ -154,7 +151,6 @@ class HomeViewController: UIViewController {
                     
                 case .failure(let error):
                     print("❌ Failed to load user \(id): \(error)")
-                    // Создаем пользователя с дефолтными данными при ошибке
                     let defaultUser = User(
                         id: id,
                         name: "Пользователь",
@@ -178,7 +174,6 @@ class HomeViewController: UIViewController {
     }
     
     private func showEmptyState() {
-        // Показываем пустое состояние если нет данных
         let emptyLabel = UILabel()
         emptyLabel.text = "Нет доступных подборок\nПроверьте подключение к интернету"
         emptyLabel.textColor = .secondaryLabel
@@ -240,14 +235,14 @@ extension HomeViewController: UICollectionViewDataSource {
             image = UIImage(systemName: "photo")
         }
         
-        // Конвертируем данные API в формат для ячейки
+        // ОБНОВЛЕНО: Используем новые методы для подсчета карточек
         cell.configure(
             title: collection.name,
             author: authorName,
             description: collection.description,
             rating: calculateRating(playCount: collection.playCount),
-            cardCount: "\(collection.actions?.count ?? 0)",
-            locationTag: generateLocationTag(),
+            cardCount: "\(collection.totalCardsCount)", // Используем computed property
+            locationTag: collection.cardTypeBreakdown, // Показываем breakdown типов карточек
             image: image
         )
         
@@ -259,10 +254,6 @@ extension HomeViewController: UICollectionViewDataSource {
         // Простая формула для генерации рейтинга на основе популярности
         let rating = min(5.0, max(3.0, 3.0 + Double(playCount) / 1000.0))
         return String(format: "%.1f", rating)
-    }
-    
-    private func generateLocationTag() -> String {
-        return ["Дома", "Улица"].randomElement() ?? "Дома"
     }
 }
 
@@ -285,21 +276,54 @@ extension HomeViewController: UICollectionViewDelegate {
         
         viewController.sampleCardLabel.text = collection.description
         
-        // Загружаем действия для этой коллекции
+        // ОБНОВЛЕНО: Устанавливаем статистику карточек
+        if let actions = collection.actions, !actions.isEmpty {
+            // Если есть карточки, показываем пример первой карточки
+            viewController.sampleCardLabel.text = actions.first?.text ?? collection.description
+            
+            // Обновляем счетчики в UI
+            viewController.updateCountLabels(
+                questionsCount: collection.totalCardsCount,
+                truthCount: collection.truthCardsCount,
+                dareCount: collection.dareCardsCount,
+                playCount: collection.playCount
+            )
+        } else {
+            // Если карточек нет, загружаем их
+            loadActionsForDetail(collection: collection, detailVC: viewController)
+        }
+        
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+    
+    private func loadActionsForDetail(collection: Collection, detailVC: DetailViewController) {
         CollectionsService.shared.getCollectionActions(id: collection.id) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let actions):
                     print("✅ Loaded \(actions.count) actions for collection \(collection.id)")
-                    // Здесь можно передать действия в DetailViewController
+                    
+                    if let firstAction = actions.first {
+                        detailVC.sampleCardLabel.text = firstAction.text
+                    }
+                    
+                    // Подсчитываем типы карточек
+                    let truthCount = actions.filter { $0.type == "truth" }.count
+                    let dareCount = actions.filter { $0.type == "dare" }.count
+                    
+                    detailVC.updateCountLabels(
+                        questionsCount: actions.count,
+                        truthCount: truthCount,
+                        dareCount: dareCount,
+                        playCount: collection.playCount
+                    )
+                    
                 case .failure(let error):
                     print("❌ Error loading actions: \(error)")
                 }
             }
         }
-        
-        viewController.modalPresentationStyle = .fullScreen
-        present(viewController, animated: true)
     }
 }
 

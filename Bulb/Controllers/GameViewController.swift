@@ -21,6 +21,17 @@ class GameViewController: UIViewController {
     private var isCountdownActive = false
     private var pulseAnimationTimer: Timer?
     
+    // MARK: - 🎯 НОВЫЕ СВОЙСТВА ДЛЯ СИСТЕМЫ ОЦЕНКИ
+    private var hasShownRatingPopup = false // Чтобы показать только один раз за сессию
+    private var totalQuestionsCount: Int {
+        return questions.count
+    }
+    
+    private var progressPercentage: Float {
+        guard totalQuestionsCount > 0 else { return 0 }
+        return Float(currentQuestionIndex + 1) / Float(totalQuestionsCount)
+    }
+    
     // MARK: - UI Components
     private lazy var backgroundView: UIView = {
         let view = UIView()
@@ -435,7 +446,35 @@ class GameViewController: UIViewController {
     }
     
     @objc private func dismissViewController() {
-        dismiss(animated: true, completion: nil)
+        // 🎯 ПРОВЕРЯЕМ ПРОГРЕСС ПЕРЕД ВЫХОДОМ
+        checkProgressAndShowRatingIfNeeded { [weak self] in
+            self?.dismiss(animated: true, completion: nil)
+        }
+    }
+    
+    // MARK: - 🎯 СИСТЕМА ОЦЕНКИ ПОДБОРКИ
+    
+    private func checkProgressAndShowRatingIfNeeded(completion: @escaping () -> Void) {
+        // Проверяем: прошел ли пользователь 25% или больше И не показывали ли уже popup
+        if progressPercentage >= 0.25 && !hasShownRatingPopup {
+            showRatingPopup(completion: completion)
+        } else {
+            completion()
+        }
+    }
+    
+    private func showRatingPopup(completion: @escaping () -> Void) {
+        hasShownRatingPopup = true
+        
+        let ratingPopup = RatingPopupViewController()
+        ratingPopup.delegate = self
+        ratingPopup.modalPresentationStyle = .overFullScreen
+        ratingPopup.modalTransitionStyle = .crossDissolve
+        
+        // Сохраняем completion для использования в delegate методах
+        objc_setAssociatedObject(ratingPopup, "completion", completion, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        
+        present(ratingPopup, animated: false)
     }
     
     // MARK: - 🎯 ИСПРАВЛЕННАЯ ОБРАБОТКА КАСАНИЙ
@@ -833,4 +872,32 @@ class GameViewController: UIViewController {
     }
 }
 
+// MARK: - 🎯 ДЕЛЕГАТ СИСТЕМЫ ОЦЕНКИ
+extension GameViewController: RatingPopupDelegate {
+    func didSubmitRating(_ rating: Int) {
+        print("🌟 User rated collection: \(rating) stars")
+        
+        // Здесь можно отправить оценку на сервер
+        // API call to submit rating...
+        
+        // Получаем completion из associated object
+        if let completion = objc_getAssociatedObject(self, "completion") as? () -> Void {
+            completion()
+        }
+    }
+    
+    func didSkipRating() {
+        print("⏭️ User skipped rating")
+        
+        // Получаем completion из associated object
+        if let completion = objc_getAssociatedObject(self, "completion") as? () -> Void {
+            completion()
+        }
+    }
+    
+    func didReturnToGame() {
+        print("🎮 User returned to game")
+        // Ничего не делаем - просто возвращаемся в игру
+    }
+}
 

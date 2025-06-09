@@ -2,7 +2,7 @@
 //  DetailViewController.swift
 //  Bulb
 //
-//  Created by Николай Жирнов on 27.03.2025.
+//  Updated with card statistics support
 //
 
 import UIKit
@@ -40,7 +40,7 @@ class DetailViewController: UIViewController {
     
     lazy var sampleCardLabel: UILabel = {
         let label = UILabel()
-        label.text = "Самый ворущий вопрос для самого честного ответа от которого ВСЕ будут в шоке реально (но не факт)?..."
+        label.text = "Самый ворующий вопрос для самого честного ответа от которого ВСЕ будут в шоке реально (но не факт)?..."
         label.numberOfLines = 0
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -48,20 +48,11 @@ class DetailViewController: UIViewController {
         return label
     }()
     
+    // ОБНОВЛЕННЫЕ лейблы для статистики карточек
     lazy var countQuestionsLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        
-        let imageAttachment = NSTextAttachment()
-        imageAttachment.image = UIImage(systemName: "questionmark.app")?.withTintColor(.black)
-        imageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14) // Размер иконки соответствует тексту
-        
-        let attributedString = NSMutableAttributedString()
-        attributedString.append(NSAttributedString(attachment: imageAttachment))
-        attributedString.append(NSAttributedString(string: " 132 карточки"))
-        label.attributedText = attributedString
-        
         return label
     }()
     
@@ -69,16 +60,15 @@ class DetailViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        
-        let imageAttachment = NSTextAttachment()
-        imageAttachment.image = UIImage(systemName: "gamecontroller.circle")?.withTintColor(.black)
-        imageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14) // Размер иконки соответствует тексту
-        
-        let attributedString = NSMutableAttributedString()
-        attributedString.append(NSAttributedString(attachment: imageAttachment))
-        attributedString.append(NSAttributedString(string: " 43 542 раз пройдено"))
-        label.attributedText = attributedString
-        
+        return label
+    }()
+    
+    // НОВЫЙ: Лейбл для показа статистики по типам карточек
+    lazy var cardTypesStatsLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.textColor = .systemBlue
         return label
     }()
     
@@ -124,6 +114,7 @@ class DetailViewController: UIViewController {
         view.addSubview(sampleCardView)
         view.addSubview(countQuestionsLabel)
         view.addSubview(countWinLabel)
+        view.addSubview(cardTypesStatsLabel) // НОВЫЙ лейбл
         view.addSubview(chooseLabel)
         view.addSubview(infoButton)
         view.addSubview(truthOrDareCollectionView)
@@ -158,7 +149,11 @@ class DetailViewController: UIViewController {
             countWinLabel.topAnchor.constraint(equalTo: countQuestionsLabel.bottomAnchor, constant: 6),
             countWinLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
-            chooseLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 24),
+            // НОВЫЙ: Статистика типов карточек
+            cardTypesStatsLabel.topAnchor.constraint(equalTo: countWinLabel.bottomAnchor, constant: 6),
+            cardTypesStatsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
+            
+            chooseLabel.topAnchor.constraint(equalTo: cardTypesStatsLabel.bottomAnchor, constant: 24),
             chooseLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
             
             infoButton.centerYAnchor.constraint(equalTo: chooseLabel.centerYAnchor),
@@ -181,6 +176,80 @@ class DetailViewController: UIViewController {
             playButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
             playButton.heightAnchor.constraint(equalToConstant: 57)
         ])
+        
+        // Устанавливаем начальные значения
+        updateCountLabelsWithDefaults()
+    }
+    
+    // НОВЫЙ МЕТОД: Обновление счетчиков карточек
+    func updateCountLabels(questionsCount: Int, truthCount: Int, dareCount: Int, playCount: Int) {
+        // Обновляем общее количество карточек
+        let questionImageAttachment = NSTextAttachment()
+        questionImageAttachment.image = UIImage(systemName: "questionmark.app")?.withTintColor(.black)
+        questionImageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14)
+        
+        let questionAttributedString = NSMutableAttributedString()
+        questionAttributedString.append(NSAttributedString(attachment: questionImageAttachment))
+        questionAttributedString.append(NSAttributedString(string: " \(questionsCount) \(getCardWord(for: questionsCount))"))
+        countQuestionsLabel.attributedText = questionAttributedString
+        
+        // Обновляем количество прохождений
+        let winImageAttachment = NSTextAttachment()
+        winImageAttachment.image = UIImage(systemName: "gamecontroller.circle")?.withTintColor(.black)
+        winImageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14)
+        
+        let winAttributedString = NSMutableAttributedString()
+        winAttributedString.append(NSAttributedString(attachment: winImageAttachment))
+        winAttributedString.append(NSAttributedString(string: " \(formatPlayCount(playCount)) раз пройдено"))
+        countWinLabel.attributedText = winAttributedString
+        
+        // НОВОЕ: Статистика по типам карточек
+        updateCardTypesStats(truthCount: truthCount, dareCount: dareCount)
+    }
+    
+    // НОВЫЙ МЕТОД: Обновление статистики по типам карточек
+    private func updateCardTypesStats(truthCount: Int, dareCount: Int) {
+        let truthImageAttachment = NSTextAttachment()
+        truthImageAttachment.image = UIImage(systemName: "person.fill")?.withTintColor(UIColor(hex: "84C500"))
+        truthImageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14)
+        
+        let dareImageAttachment = NSTextAttachment()
+        dareImageAttachment.image = UIImage(systemName: "figure.run")?.withTintColor(UIColor(hex: "5800CF"))
+        dareImageAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14)
+        
+        let statsAttributedString = NSMutableAttributedString()
+        statsAttributedString.append(NSAttributedString(attachment: truthImageAttachment))
+        statsAttributedString.append(NSAttributedString(string: " \(truthCount) правда"))
+        statsAttributedString.append(NSAttributedString(string: "  •  "))
+        statsAttributedString.append(NSAttributedString(attachment: dareImageAttachment))
+        statsAttributedString.append(NSAttributedString(string: " \(dareCount) действие"))
+        
+        cardTypesStatsLabel.attributedText = statsAttributedString
+    }
+    
+    // HELPER: Форматирование количества карточек
+    private func getCardWord(for count: Int) -> String {
+        switch count {
+        case 1:
+            return "карточка"
+        case 2...4:
+            return "карточки"
+        default:
+            return "карточек"
+        }
+    }
+    
+    // HELPER: Форматирование количества прохождений
+    private func formatPlayCount(_ count: Int) -> String {
+        if count >= 1000 {
+            return String(format: "%.1fk", Double(count) / 1000.0).replacingOccurrences(of: ".0", with: "")
+        }
+        return "\(count)"
+    }
+    
+    // Устанавливаем значения по умолчанию при загрузке
+    private func updateCountLabelsWithDefaults() {
+        updateCountLabels(questionsCount: 0, truthCount: 0, dareCount: 0, playCount: 0)
     }
     
     private func setupTruthOrDareCollectionView() {
@@ -239,14 +308,11 @@ class DetailViewController: UIViewController {
     }
     
     @objc private func didTabPlayButton() {
-        // Проверяем, выбран ли хотя бы один режим (Правда или Действие)
         guard !selectedTruthOrDareModes.isEmpty else {
-            // Если ни один режим не выбран, показываем предупреждение
             showAlert(message: "Пожалуйста, выберите режим (Правда или Действие)")
             return
         }
         
-        // Если хотя бы один режим выбран, продолжаем запуск игры
         switch selectedSelectionMode {
         case .fingers:
             let gameVC = GameViewController()
@@ -262,7 +328,6 @@ class DetailViewController: UIViewController {
         }
     }
 
-    // Метод для показа алерта с сообщением
     private func showAlert(message: String) {
         let alertController = UIAlertController(
             title: "Внимание",

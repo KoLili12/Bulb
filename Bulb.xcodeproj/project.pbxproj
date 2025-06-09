@@ -10,8 +10,19 @@
 		CE28DBC92DA4370200050DA6 /* CHGlassmorphismView in Frameworks */ = {isa = PBXBuildFile; productRef = CE28DBC82DA4370200050DA6 /* CHGlassmorphismView */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		CE5322D52DEB8258001F5600 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4EBF89082D92C808000A286E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4EBF890F2D92C808000A286E;
+			remoteInfo = Bulb;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		4EBF89102D92C808000A286E /* Bulb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bulb.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE5322D12DEB8258001F5600 /* BulbTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BulbTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -33,6 +44,11 @@
 			path = Bulb;
 			sourceTree = "<group>";
 		};
+		CE5322D22DEB8258001F5600 /* BulbTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BulbTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +60,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE5322CE2DEB8258001F5600 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -51,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				4EBF89122D92C808000A286E /* Bulb */,
+				CE5322D22DEB8258001F5600 /* BulbTests */,
 				4EBF89112D92C808000A286E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -59,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				4EBF89102D92C808000A286E /* Bulb.app */,
+				CE5322D12DEB8258001F5600 /* BulbTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -89,6 +114,29 @@
 			productReference = 4EBF89102D92C808000A286E /* Bulb.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CE5322D02DEB8258001F5600 /* BulbTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE5322D92DEB8258001F5600 /* Build configuration list for PBXNativeTarget "BulbTests" */;
+			buildPhases = (
+				CE5322CD2DEB8258001F5600 /* Sources */,
+				CE5322CE2DEB8258001F5600 /* Frameworks */,
+				CE5322CF2DEB8258001F5600 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE5322D62DEB8258001F5600 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE5322D22DEB8258001F5600 /* BulbTests */,
+			);
+			name = BulbTests;
+			packageProductDependencies = (
+			);
+			productName = BulbTests;
+			productReference = CE5322D12DEB8258001F5600 /* BulbTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -96,11 +144,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
+				LastSwiftUpdateCheck = 1610;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					4EBF890F2D92C808000A286E = {
 						CreatedOnToolsVersion = 16.2;
+					};
+					CE5322D02DEB8258001F5600 = {
+						CreatedOnToolsVersion = 16.1;
+						TestTargetID = 4EBF890F2D92C808000A286E;
 					};
 				};
 			};
@@ -122,12 +174,20 @@
 			projectRoot = "";
 			targets = (
 				4EBF890F2D92C808000A286E /* Bulb */,
+				CE5322D02DEB8258001F5600 /* BulbTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4EBF890E2D92C808000A286E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5322CF2DEB8258001F5600 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -144,7 +204,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE5322CD2DEB8258001F5600 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CE5322D62DEB8258001F5600 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4EBF890F2D92C808000A286E /* Bulb */;
+			targetProxy = CE5322D52DEB8258001F5600 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4EBF89242D92C809000A286E /* Debug */ = {
@@ -322,6 +397,56 @@
 			};
 			name = Release;
 		};
+		CE5322D72DEB8258001F5600 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7U42B24FKK;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.BulbTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Bulb.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Bulb";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Debug;
+		};
+		CE5322D82DEB8258001F5600 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7U42B24FKK;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.BulbTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Bulb.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Bulb";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -339,6 +464,15 @@
 			buildConfigurations = (
 				4EBF89242D92C809000A286E /* Debug */,
 				4EBF89252D92C809000A286E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE5322D92DEB8258001F5600 /* Build configuration list for PBXNativeTarget "BulbTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE5322D72DEB8258001F5600 /* Debug */,
+				CE5322D82DEB8258001F5600 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
