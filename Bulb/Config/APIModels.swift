@@ -55,7 +55,7 @@ struct User: Codable {
     }
 }
 
-// MARK: - Enhanced CardType enum for UI (moved before usage)
+// MARK: - Enhanced CardType enum for UI
 enum CardType: String, CaseIterable {
     case truth = "truth"
     case dare = "dare"
@@ -94,6 +94,22 @@ enum CardType: String, CaseIterable {
         case .dare:
             return "🎯"
         }
+    }
+}
+
+// MARK: - GameCard (UI Model) - ЕДИНСТВЕННОЕ определение
+struct GameCard {
+    let id = UUID()
+    let text: String
+    let type: CardType
+    
+    // Convert to API format
+    var apiAction: CreateActionRequest {
+        return CreateActionRequest(
+            text: text,
+            type: type.rawValue,
+            order: 0 // Will be set by service
+        )
     }
 }
 
@@ -265,21 +281,5 @@ enum LocationTag: String, CaseIterable {
         case .street:
             return "road.lanes"
         }
-    }
-}
-
-// MARK: - GameCard compatibility for local UI models
-struct GameCard {
-    let id = UUID()
-    let text: String
-    let type: CardType
-    
-    // Convert to API format
-    var apiAction: CreateActionRequest {
-        return CreateActionRequest(
-            text: text,
-            type: type.rawValue,
-            order: 0 // Will be set by service
-        )
     }
 }

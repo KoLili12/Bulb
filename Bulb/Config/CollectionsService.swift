@@ -218,19 +218,3 @@ class CollectionsService {
         APIConfig.testConnection(completion: completion)
     }
 }
-
-// MARK: - GameCard compatibility for local UI models
-struct GameCard {
-    let id = UUID()
-    let text: String
-    let type: CardType
-    
-    // Convert to API format
-    var apiAction: CreateActionRequest {
-        return CreateActionRequest(
-            text: text,
-            type: type.rawValue,
-            order: 0 // Will be set by service
-        )
-    }
-}

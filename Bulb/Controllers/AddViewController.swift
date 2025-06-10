@@ -2,7 +2,7 @@
 //  AddViewController.swift
 //  Bulb
 //
-//  Updated to use the new API endpoint for creating collections with actions
+//  Complete implementation with all missing methods
 //
 
 import UIKit
@@ -24,7 +24,7 @@ class AddViewController: UIViewController {
     private var truthIcon: UIImageView!
     private var dareIcon: UIImageView!
     
-    // MARK: - UI Components (keeping existing UI setup code)
+    // MARK: - UI Components
     
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -115,7 +115,6 @@ class AddViewController: UIViewController {
         return label
     }()
     
-    // ОБНОВЛЕННЫЙ: Лейбл с детальной статистикой карточек
     private lazy var cardsCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0 карточек"
@@ -239,7 +238,7 @@ class AddViewController: UIViewController {
         present(loginVC, animated: true)
     }
     
-    // MARK: - Setup Methods (keeping existing setup code)
+    // MARK: - Setup Methods
     
     private func setupUI() {
         view.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
@@ -373,7 +372,7 @@ class AddViewController: UIViewController {
         )
     }
     
-    // MARK: - ОБНОВЛЕННЫЙ метод подсчета карточек с детальной статистикой
+    // MARK: - Card Management Methods
     
     private func updateCardsCount() {
         let count = cards.count
@@ -430,7 +429,306 @@ class AddViewController: UIViewController {
         }
     }
     
-    // MARK: - ОБНОВЛЕННЫЙ API метод создания коллекции
+    private func updateCardsDisplay() {
+        cardsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        if cards.isEmpty {
+            let emptyLabel = UILabel()
+            emptyLabel.text = "Карточки появятся здесь"
+            emptyLabel.textColor = .secondaryLabel
+            emptyLabel.textAlignment = .center
+            emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            cardsStackView.addArrangedSubview(emptyLabel)
+        } else {
+            for (index, card) in cards.enumerated() {
+                let cardView = createCardDisplayView(for: card, at: index)
+                cardsStackView.addArrangedSubview(cardView)
+            }
+        }
+        
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+    }
+    
+    private func createCardDisplayView(for card: GameCard, at index: Int) -> UIView {
+        let cardView = UIView()
+        cardView.backgroundColor = .systemGray6
+        cardView.layer.cornerRadius = 12
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Type indicator
+        let typeIndicator = UIView()
+        typeIndicator.backgroundColor = card.type.color
+        typeIndicator.layer.cornerRadius = 4
+        typeIndicator.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Type label
+        let typeLabel = UILabel()
+        typeLabel.text = card.type.emoji + " " + card.type.displayName
+        typeLabel.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        typeLabel.textColor = card.type.color
+        typeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Card text
+        let cardTextLabel = UILabel()
+        cardTextLabel.text = card.text
+        cardTextLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        cardTextLabel.numberOfLines = 0
+        cardTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Delete button
+        let deleteButton = UIButton(type: .system)
+        deleteButton.setImage(UIImage(systemName: "trash"), for: .normal)
+        deleteButton.tintColor = .systemRed
+        deleteButton.tag = index
+        deleteButton.addTarget(self, action: #selector(deleteCard(_:)), for: .touchUpInside)
+        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        cardView.addSubview(typeIndicator)
+        cardView.addSubview(typeLabel)
+        cardView.addSubview(cardTextLabel)
+        cardView.addSubview(deleteButton)
+        
+        NSLayoutConstraint.activate([
+            cardView.heightAnchor.constraint(greaterThanOrEqualToConstant: 80),
+            
+            typeIndicator.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            typeIndicator.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            typeIndicator.widthAnchor.constraint(equalToConstant: 4),
+            typeIndicator.heightAnchor.constraint(equalToConstant: 20),
+            
+            typeLabel.centerYAnchor.constraint(equalTo: typeIndicator.centerYAnchor),
+            typeLabel.leadingAnchor.constraint(equalTo: typeIndicator.trailingAnchor, constant: 8),
+            
+            deleteButton.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            deleteButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            deleteButton.widthAnchor.constraint(equalToConstant: 24),
+            deleteButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            cardTextLabel.topAnchor.constraint(equalTo: typeLabel.bottomAnchor, constant: 8),
+            cardTextLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            cardTextLabel.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor, constant: -8),
+            cardTextLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12)
+        ])
+        
+        return cardView
+    }
+    
+    // MARK: - Card Creation Form Methods
+    
+    @objc private func didTapAddCard() {
+        showCardCreationForm()
+    }
+    
+    private func showCardCreationForm() {
+        cardCreationForm.isHidden = false
+        setupCardCreationFormContent()
+        
+        cardCreationFormHeightConstraint.constant = 300
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [], animations: {
+            self.view.layoutIfNeeded()
+        })
+        
+        cardTextView.becomeFirstResponder()
+    }
+    
+    private func setupCardCreationFormContent() {
+        // Clear previous content
+        cardCreationForm.subviews.forEach { $0.removeFromSuperview() }
+        
+        // Header
+        let headerLabel = UILabel()
+        headerLabel.text = "Новая карточка"
+        headerLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Text view
+        cardTextView = UITextView()
+        cardTextView.font = UIFont.systemFont(ofSize: 16)
+        cardTextView.backgroundColor = UIColor(white: 0.97, alpha: 1.0)
+        cardTextView.layer.cornerRadius = 12
+        cardTextView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        cardTextView.delegate = self
+        cardTextView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Character count
+        characterCountLabel = UILabel()
+        characterCountLabel.text = "0/170"
+        characterCountLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        characterCountLabel.textColor = .secondaryLabel
+        characterCountLabel.textAlignment = .right
+        characterCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Type selection
+        let typeSelectionContainer = UIView()
+        typeSelectionContainer.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Truth button
+        truthButton = UIButton(type: .system)
+        truthButton.setTitle("👤 Правда", for: .normal)
+        truthButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        truthButton.backgroundColor = CardType.truth.color
+        truthButton.setTitleColor(.white, for: .normal)
+        truthButton.layer.cornerRadius = 12
+        truthButton.addTarget(self, action: #selector(selectTruthType), for: .touchUpInside)
+        truthButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Dare button
+        dareButton = UIButton(type: .system)
+        dareButton.setTitle("🎯 Действие", for: .normal)
+        dareButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        dareButton.backgroundColor = .systemGray5
+        dareButton.setTitleColor(.label, for: .normal)
+        dareButton.layer.cornerRadius = 12
+        dareButton.addTarget(self, action: #selector(selectDareType), for: .touchUpInside)
+        dareButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        typeSelectionContainer.addSubview(truthButton)
+        typeSelectionContainer.addSubview(dareButton)
+        
+        // Action buttons
+        let buttonsContainer = UIView()
+        buttonsContainer.translatesAutoresizingMaskIntoConstraints = false
+        
+        let cancelButton = UIButton(type: .system)
+        cancelButton.setTitle("Отмена", for: .normal)
+        cancelButton.setTitleColor(.systemRed, for: .normal)
+        cancelButton.addTarget(self, action: #selector(cancelCardCreation), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        let saveButton = UIButton(type: .system)
+        saveButton.setTitle("Сохранить", for: .normal)
+        saveButton.setTitleColor(.white, for: .normal)
+        saveButton.backgroundColor = UIColor(named: "violetBulb")
+        saveButton.layer.cornerRadius = 8
+        saveButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        saveButton.addTarget(self, action: #selector(saveCard), for: .touchUpInside)
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        buttonsContainer.addSubview(cancelButton)
+        buttonsContainer.addSubview(saveButton)
+        
+        // Add all to form
+        cardCreationForm.addSubview(headerLabel)
+        cardCreationForm.addSubview(cardTextView)
+        cardCreationForm.addSubview(characterCountLabel)
+        cardCreationForm.addSubview(typeSelectionContainer)
+        cardCreationForm.addSubview(buttonsContainer)
+        
+        NSLayoutConstraint.activate([
+            headerLabel.topAnchor.constraint(equalTo: cardCreationForm.topAnchor, constant: 16),
+            headerLabel.leadingAnchor.constraint(equalTo: cardCreationForm.leadingAnchor, constant: 16),
+            headerLabel.trailingAnchor.constraint(equalTo: cardCreationForm.trailingAnchor, constant: -16),
+            
+            cardTextView.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 16),
+            cardTextView.leadingAnchor.constraint(equalTo: cardCreationForm.leadingAnchor, constant: 16),
+            cardTextView.trailingAnchor.constraint(equalTo: cardCreationForm.trailingAnchor, constant: -16),
+            cardTextView.heightAnchor.constraint(equalToConstant: 100),
+            
+            characterCountLabel.topAnchor.constraint(equalTo: cardTextView.bottomAnchor, constant: 4),
+            characterCountLabel.trailingAnchor.constraint(equalTo: cardCreationForm.trailingAnchor, constant: -16),
+            
+            typeSelectionContainer.topAnchor.constraint(equalTo: characterCountLabel.bottomAnchor, constant: 16),
+            typeSelectionContainer.leadingAnchor.constraint(equalTo: cardCreationForm.leadingAnchor, constant: 16),
+            typeSelectionContainer.trailingAnchor.constraint(equalTo: cardCreationForm.trailingAnchor, constant: -16),
+            typeSelectionContainer.heightAnchor.constraint(equalToConstant: 44),
+            
+            truthButton.topAnchor.constraint(equalTo: typeSelectionContainer.topAnchor),
+            truthButton.leadingAnchor.constraint(equalTo: typeSelectionContainer.leadingAnchor),
+            truthButton.bottomAnchor.constraint(equalTo: typeSelectionContainer.bottomAnchor),
+            truthButton.widthAnchor.constraint(equalTo: typeSelectionContainer.widthAnchor, multiplier: 0.48),
+            
+            dareButton.topAnchor.constraint(equalTo: typeSelectionContainer.topAnchor),
+            dareButton.trailingAnchor.constraint(equalTo: typeSelectionContainer.trailingAnchor),
+            dareButton.bottomAnchor.constraint(equalTo: typeSelectionContainer.bottomAnchor),
+            dareButton.widthAnchor.constraint(equalTo: typeSelectionContainer.widthAnchor, multiplier: 0.48),
+            
+            buttonsContainer.topAnchor.constraint(equalTo: typeSelectionContainer.bottomAnchor, constant: 16),
+            buttonsContainer.leadingAnchor.constraint(equalTo: cardCreationForm.leadingAnchor, constant: 16),
+            buttonsContainer.trailingAnchor.constraint(equalTo: cardCreationForm.trailingAnchor, constant: -16),
+            buttonsContainer.bottomAnchor.constraint(equalTo: cardCreationForm.bottomAnchor, constant: -16),
+            buttonsContainer.heightAnchor.constraint(equalToConstant: 44),
+            
+            cancelButton.centerYAnchor.constraint(equalTo: buttonsContainer.centerYAnchor),
+            cancelButton.leadingAnchor.constraint(equalTo: buttonsContainer.leadingAnchor),
+            
+            saveButton.centerYAnchor.constraint(equalTo: buttonsContainer.centerYAnchor),
+            saveButton.trailingAnchor.constraint(equalTo: buttonsContainer.trailingAnchor)
+        ])
+    }
+    
+    @objc private func selectTruthType() {
+        selectedCardType = .truth
+        updateTypeButtonsAppearance()
+    }
+    
+    @objc private func selectDareType() {
+        selectedCardType = .dare
+        updateTypeButtonsAppearance()
+    }
+    
+    private func updateTypeButtonsAppearance() {
+        switch selectedCardType {
+        case .truth:
+            truthButton.backgroundColor = CardType.truth.color
+            truthButton.setTitleColor(.white, for: .normal)
+            dareButton.backgroundColor = .systemGray5
+            dareButton.setTitleColor(.label, for: .normal)
+        case .dare:
+            dareButton.backgroundColor = CardType.dare.color
+            dareButton.setTitleColor(.white, for: .normal)
+            truthButton.backgroundColor = .systemGray5
+            truthButton.setTitleColor(.label, for: .normal)
+        }
+    }
+    
+    @objc private func saveCard() {
+        guard let text = cardTextView.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty else {
+            showAlert(title: "Ошибка", message: "Введите текст карточки")
+            return
+        }
+        
+        guard text.count <= 170 else {
+            showAlert(title: "Ошибка", message: "Текст карточки не должен превышать 170 символов")
+            return
+        }
+        
+        let newCard = GameCard(text: text, type: selectedCardType)
+        cards.append(newCard)
+        
+        hideCardCreationForm()
+        updateCardsCount()
+    }
+    
+    @objc private func cancelCardCreation() {
+        hideCardCreationForm()
+    }
+    
+    private func hideCardCreationForm() {
+        cardCreationFormHeightConstraint.constant = 0
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.layoutIfNeeded()
+        }) { _ in
+            self.cardCreationForm.isHidden = true
+            self.cardTextView.text = ""
+            self.characterCountLabel.text = "0/170"
+            self.selectedCardType = .truth
+            self.updateTypeButtonsAppearance()
+        }
+        
+        view.endEditing(true)
+    }
+    
+    @objc private func deleteCard(_ sender: UIButton) {
+        let index = sender.tag
+        guard index < cards.count else { return }
+        
+        cards.remove(at: index)
+        updateCardsCount()
+    }
+    
+    // MARK: - Collection Creation
     
     @objc private func didTapCreate() {
         createCollectionWithActionsAPI()
@@ -459,11 +757,10 @@ class AddViewController: UIViewController {
         
         setLoading(true)
         
-        // ОБНОВЛЕНО: Используем новый метод API для создания коллекции с карточками
         CollectionsService.shared.createCollectionWithActions(
             name: name,
             description: description,
-            actions: cards, // Передаем массив GameCard
+            actions: cards,
             imageUrl: nil
         ) { [weak self] result in
             DispatchQueue.main.async {
@@ -518,48 +815,54 @@ class AddViewController: UIViewController {
         hideCardCreationForm()
     }
     
-    // MARK: - Card Creation Methods (keeping existing methods)
+    // MARK: - Keyboard Management
     
-    @objc private func didTapAddCard() {
-        showCardCreationFormView()
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
     
-    // [Keeping all existing card creation methods unchanged...]
-    
-    private func showCardCreationFormView() {
-        cardCreationForm.isHidden = false
-        setupCardCreationFormContent()
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardHeight = keyboardFrame.cgRectValue.height
         
-        cardCreationFormHeightConstraint.constant = 300
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [], animations: {
-            self.view.layoutIfNeeded()
-        })
-        
-        cardTextView.becomeFirstResponder()
+        scrollView.contentInset.bottom = keyboardHeight
+        scrollView.scrollIndicatorInsets.bottom = keyboardHeight
     }
     
-    // [Include all remaining existing methods for card creation, UI updates, etc...]
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        scrollView.contentInset.bottom = 0
+        scrollView.scrollIndicatorInsets.bottom = 0
+    }
     
-    private func updateCardsDisplay() {
-        cardsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        if cards.isEmpty {
-            let emptyLabel = UILabel()
-            emptyLabel.text = "Карточки появятся здесь"
-            emptyLabel.textColor = .secondaryLabel
-            emptyLabel.textAlignment = .center
-            emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            cardsStackView.addArrangedSubview(emptyLabel)
-        } else {
-            for (index, card) in cards.enumerated() {
-                let cardView = createCardDisplayView(for: card, at: index)
-                cardsStackView.addArrangedSubview(cardView)
-            }
+    // MARK: - Helper Methods
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - UITextViewDelegate
+
+extension AddViewController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        if textView == descriptionTextView {
+            placeholderLabel.isHidden = !textView.text.isEmpty
+        } else if textView == cardTextView {
+            let count = textView.text.count
+            characterCountLabel.text = "\(count)/170"
+            characterCountLabel.textColor = count > 170 ? .systemRed : .secondaryLabel
         }
-        
-        view.setNeedsLayout()
-        view.layoutIfNeeded()
     }
     
-    // [Continue with all other existing methods...]
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if textView == cardTextView {
+            let currentText = textView.text ?? ""
+            guard let stringRange = Range(range, in: currentText) else { return false }
+            let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
+            return updatedText.count <= 170
+        }
+        return true
+    }
 }
