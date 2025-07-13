@@ -5,10 +5,12 @@
 //  Created by Николай Жирнов on 28.03.2025.
 //
 
-// Перечисление для режимов игры
-enum GameMode: String, CaseIterable {
-    case random = "Рандом"
-    case list = "По списку"
-    case wheel = "Колесо"
-    case fingers = "По пальцам"
+enum TruthOrDareMode: String, CaseIterable {
+    case truth = "Правда"
+    case dare = "Действие"
+}
+
+enum SelectionMode: String, CaseIterable {
+    case fingers = "Пальцы"
+    case arrow = "Стрелка"
 }

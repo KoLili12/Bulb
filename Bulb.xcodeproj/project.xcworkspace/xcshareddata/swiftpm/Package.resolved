@@ -1,0 +1,15 @@
+{
+  "originHash" : "0d2a8174d50960d57f042f7192925f7712ec3f4980a38059b45b18703ce0ce32",
+  "pins" : [
+    {
+      "identity" : "chglassmorphismview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Chaehui-Seo/CHGlassmorphismView.git",
+      "state" : {
+        "revision" : "d401d023d91542966c78530be7c54c3672225061",
+        "version" : "1.0.1"
+      }
+    }
+  ],
+  "version" : 3
+}
